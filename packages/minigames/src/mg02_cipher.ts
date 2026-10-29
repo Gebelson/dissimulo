@@ -1,5 +1,38 @@
-// 02: Quebra de Cifra
-// Player decodes a forensic transmission using an encryption key / Caesar shift
+// 02: Decifrar Código (Keypad Pin) & Quebra de Cifra
+// Keypad PIN entry with short code obtained in forensic evidence stamp.
+// Preserves legacy Caesar cipher for compatibility.
+
+export interface CodeDecipherChallenge {
+  code: string;
+  codeLength: number;
+  label: string;
+  clueStamp: string;
+}
+
+export class CodeDecipherGame {
+  public static generate(difficulty: "CASUAL" | "STANDARD" | "TENSION" | number = "STANDARD"): CodeDecipherChallenge {
+    let length = 4;
+    if (difficulty === "CASUAL" || difficulty === 1) {
+      length = 3;
+    }
+
+    let code = "";
+    for (let i = 0; i < length; i++) {
+      code += Math.floor(Math.random() * 9) + 1; // 1-9
+    }
+
+    return {
+      code,
+      codeLength: length,
+      label: "Terminal de Acesso Criptografado",
+      clueStamp: `REGISTRO PERICIAL: CHAVE [ ${code.split("").join(" ")} ]`,
+    };
+  }
+
+  public static verify(enteredCode: string, targetCode: string): boolean {
+    return enteredCode.trim() === targetCode.trim();
+  }
+}
 
 export interface CipherChallenge {
   encryptedText: string;
@@ -18,12 +51,19 @@ const WORDS = [
 ];
 
 export class CipherGame {
+  public static generateKeypad(difficulty?: any): CodeDecipherChallenge {
+    return CodeDecipherGame.generate(difficulty);
+  }
+
+  public static verifyKeypad(entered: string, target: string): boolean {
+    return CodeDecipherGame.verify(entered, target);
+  }
+
   public static generate(difficulty = 2): CipherChallenge {
     const item = WORDS[Math.floor(Math.random() * WORDS.length)];
-    const shift = (difficulty * 2 + 1) % 25 + 1; // 3 to 7
+    const shift = (difficulty * 2 + 1) % 25 + 1;
     const encrypted = this.applyShift(item.word, shift);
 
-    // Generate 3 distractors
     const options = [item.word];
     while (options.length < 4) {
       const candidate = WORDS[Math.floor(Math.random() * WORDS.length)].word;

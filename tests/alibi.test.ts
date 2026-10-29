@@ -14,6 +14,14 @@ import {
   TerminalSyncGame,
   PacketReassemblyGame,
 } from "@alibi/minigames";
+import {
+  WireGame,
+  FingerprintGame,
+  ArchiveLockGame,
+  TimingPowerGame,
+  CodeDecipherGame,
+  EvidenceAnalysisGame,
+} from "@alibi/minigames";
 import { ManualRoomProvider } from "@alibi/location";
 
 describe("Dissimulo — Invariantes Críticas de Regras e Armadilhas", () => {
@@ -221,5 +229,91 @@ describe("Dissimulo — Validação dos 12 Minigames", () => {
     const challenge = PacketReassemblyGame.generate();
     expect(PacketReassemblyGame.isCorrect([1, 2, 3, 4])).toBe(true);
     expect(PacketReassemblyGame.isCorrect([3, 1, 2, 4])).toBe(false);
+
+  });
+});
+
+describe("Dissimulo — Os 8 Novos Minigames Rápidos e Intuitivos (Noir Criminal)", () => {
+  it("01. Reconectar Circuito (Wires) — valida conexão correta dos fios de cores correspondentes", () => {
+    const challenge = WireGame.generate("STANDARD");
+    expect(challenge.wireCount).toBe(3);
+    expect(challenge.leftPins.length).toBe(3);
+    expect(challenge.rightPins.length).toBe(3);
+
+    const correctConnections: Record<string, string> = {};
+    for (const left of challenge.leftPins) {
+      const match = challenge.rightPins.find((r) => r.colorKey === left.colorKey)!;
+      correctConnections[left.id] = match.id;
+    }
+
+    expect(WireGame.verify(correctConnections, challenge)).toBe(true);
+    expect(WireGame.verify({}, challenge)).toBe(false);
+  });
+
+  it("02. Analisar Digital (Fingerprint) — alinha 3 fragmentos da impressão digital", () => {
+    const challenge = FingerprintGame.generate("STANDARD");
+    expect(challenge.slices.length).toBe(3);
+
+    const nextVar = FingerprintGame.cycleSlice(challenge.slices[0].currentVariant);
+    expect(nextVar).toBe((challenge.slices[0].currentVariant + 1) % 3);
+
+    const alignedSlices = challenge.slices.map((s) => ({ ...s, currentVariant: s.targetVariant }));
+    expect(FingerprintGame.isAligned(alignedSlices)).toBe(true);
+  });
+
+  it("03. Abrir Arquivo (Archive Lock) — gira disco de segredo até a posição indicada", () => {
+    const challenge = ArchiveLockGame.generate("STANDARD");
+    expect(challenge.totalPositions).toBe(8);
+    expect(challenge.targetPosition).toBeGreaterThanOrEqual(1);
+    expect(challenge.targetPosition).toBeLessThanOrEqual(8);
+
+    const nextRight = ArchiveLockGame.step(challenge.initialPosition, "RIGHT", 8);
+    expect(nextRight).toBe((challenge.initialPosition % 8) + 1);
+
+    expect(ArchiveLockGame.isUnlocked(challenge.targetPosition, challenge.targetPosition)).toBe(true);
+    expect(ArchiveLockGame.isUnlocked((challenge.targetPosition % 8) + 1, challenge.targetPosition)).toBe(false);
+  });
+
+  it("04. Restaurar Energia (Skillbar Timing) — valida toque dentro da zona de timing", () => {
+    const challenge = TimingPowerGame.generate("STANDARD");
+    expect(challenge.zoneEnd).toBeGreaterThan(challenge.zoneStart);
+
+    const midPoint = (challenge.zoneStart + challenge.zoneEnd) / 2;
+    expect(TimingPowerGame.isHit(midPoint, challenge)).toBe(true);
+    expect(TimingPowerGame.isHit(0, challenge)).toBe(false);
+    expect(TimingPowerGame.isHit(100, challenge)).toBe(false);
+  });
+
+  it("05. Recuperar Documento (Torn Doc) — valida reconstituição dos fragmentos", () => {
+    const challenge = DocReconstructGame.generate();
+    expect(challenge.fragments.length).toBeGreaterThanOrEqual(3);
+    expect(DocReconstructGame.isSolved([1, 2, 3, 4])).toBe(true);
+    expect(DocReconstructGame.isSolved([4, 3, 2, 1])).toBe(false);
+  });
+
+  it("06. Decifrar Código (Keypad) — valida senha curta fornecida na evidência", () => {
+    const challenge = CodeDecipherGame.generate("STANDARD");
+    expect(challenge.code.length).toBe(4);
+    expect(CodeDecipherGame.verify(challenge.code, challenge.code)).toBe(true);
+    expect(CodeDecipherGame.verify("0000", challenge.code)).toBe(false);
+  });
+
+  it("07. Interceptar Sinal (Telegraph) — valida repetição de sequência luminosa", () => {
+    const challenge = SignalMemoryGame.generate(3, 4);
+    expect(challenge.sequence.length).toBe(3);
+    expect(SignalMemoryGame.verify(challenge.sequence, challenge.sequence)).toBe(true);
+    expect(SignalMemoryGame.verify([9, 9, 9], challenge.sequence)).toBe(false);
+  });
+
+  it("08. Analisar Evidência (Spot Differences) — valida identificação de adulterações em fotos", () => {
+    const challenge = EvidenceAnalysisGame.generate("STANDARD");
+    expect(challenge.differences.length).toBeGreaterThanOrEqual(2);
+
+    const firstDiff = challenge.differences[0];
+    expect(EvidenceAnalysisGame.isDifferenceHit(firstDiff.xPercent, firstDiff.yPercent, firstDiff)).toBe(true);
+    expect(EvidenceAnalysisGame.isDifferenceHit(0, 0, firstDiff)).toBe(false);
+
+    const allIds = challenge.differences.map((d) => d.id);
+    expect(EvidenceAnalysisGame.isComplete(allIds, challenge)).toBe(true);
   });
 });

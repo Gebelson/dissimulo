@@ -1,5 +1,47 @@
-// 07: Reconstruir Cronologia
-// Sorting scrambled event cards into strict chronological sequence
+// 07: Abrir Arquivo (Archive Lock) & Cronologia
+// Mechanical rotating safe dial / file cabinet tumbler.
+// Preserves legacy chronological ordering for compatibility.
+
+export interface ArchiveLockChallenge {
+  totalPositions: number; // default 8
+  targetPosition: number; // e.g. 5
+  initialPosition: number; // e.g. 1
+  label: string;
+  evidenceCode: string;
+}
+
+export class ArchiveLockGame {
+  public static generate(difficulty: "CASUAL" | "STANDARD" | "TENSION" | number = "STANDARD"): ArchiveLockChallenge {
+    const totalPositions = 8;
+    const target = Math.floor(Math.random() * totalPositions) + 1; // 1 to 8
+    
+    // Pick an initial position that is distinct from target
+    let initial = Math.floor(Math.random() * totalPositions) + 1;
+    if (initial === target) {
+      initial = (target % totalPositions) + 1;
+    }
+
+    return {
+      totalPositions,
+      targetPosition: target,
+      initialPosition: initial,
+      label: "Arquivo de Laudos Forenses // Gaveta B-4",
+      evidenceCode: `MARCAÇÃO PERICIAL: SEGREDOS [ ${target} ]`,
+    };
+  }
+
+  public static step(current: number, direction: "LEFT" | "RIGHT", total = 8): number {
+    if (direction === "RIGHT") {
+      return (current % total) + 1;
+    } else {
+      return current === 1 ? total : current - 1;
+    }
+  }
+
+  public static isUnlocked(current: number, target: number): boolean {
+    return current === target;
+  }
+}
 
 export interface ChronoEvent {
   id: number;
@@ -14,6 +56,14 @@ export interface ChronologyChallenge {
 }
 
 export class ChronologyGame {
+  public static generateDial(difficulty?: any): ArchiveLockChallenge {
+    return ArchiveLockGame.generate(difficulty);
+  }
+
+  public static verifyDial(current: number, target: number): boolean {
+    return ArchiveLockGame.isUnlocked(current, target);
+  }
+
   public static generate(): ChronologyChallenge {
     const sortedEvents: ChronoEvent[] = [
       { id: 1, timeStr: "20:50", minutesTimestamp: 50, description: "Chegada dos participantes na Sala" },

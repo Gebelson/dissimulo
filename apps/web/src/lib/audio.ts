@@ -216,6 +216,62 @@ class SoundEngine {
     osc.start();
     osc.stop(ctx.currentTime + 0.8);
   }
+
+  // Heavy mechanical tumbler click for rotary lock
+  public playTumblerClick(): void {
+    this.vibrate(20);
+    if (!this.isSoundEnabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(140, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.045);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.045);
+  }
+
+  // Telegraph Morse impulse
+  public playTelegraphBeep(frequency = 750, duration = 0.08): void {
+    this.vibrate(30);
+    if (!this.isSoundEnabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  // Electrical contact / spark snap
+  public playElectricRelay(): void {
+    this.vibrate([35, 20]);
+    if (!this.isSoundEnabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(900, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  }
 }
 
 export const sound = new SoundEngine();

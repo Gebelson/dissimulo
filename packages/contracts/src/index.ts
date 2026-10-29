@@ -134,19 +134,28 @@ export const DEFAULT_HOUSE_ROOMS: RoomConfig[] = [
 // ==========================================
 // MINIGAMES
 // ==========================================
+export const MinigameDifficultySchema = z.enum(["CASUAL", "STANDARD", "TENSION"]);
+export type MinigameDifficulty = z.infer<typeof MinigameDifficultySchema>;
+
 export const MinigameIdSchema = z.enum([
-  "circuit_reconnect",     // 01: Reconectar Circuitos
-  "cipher_breaker",        // 02: Quebra de Cifra
-  "doc_reconstruct",       // 03: Reconstruir Documento
-  "log_audit",             // 04: Comparação de Registros
-  "signal_memory",         // 05: Memória de Sinais
-  "trace_pattern",         // 06: Análise de Vestígios
-  "chronology_order",      // 07: Reconstruir Cronologia
-  "frequency_tune",        // 08: Estabilizar Frequência
-  "anomaly_detect",        // 09: Localizar Anomalia
-  "seal_auth",             // 10: Autenticar Documento
-  "terminal_sync",         // 11: Sincronizar Terminais
-  "packet_reassembly",     // 12: Reconstruir Transmissão
+  // 8 Minigames Oficiais do Dissimulo
+  "circuit_reconnect",     // 01: Reconectar Circuito (conectar 2 ou 3 fios)
+  "fingerprint_match",     // 02: Analisar Digital (alinhar 3 fragmentos de impressão digital)
+  "archive_lock",          // 03: Abrir Arquivo (girar disco ou mecanismo até a posição indicada)
+  "timing_power",          // 04: Restaurar Energia (acertar marcador de timing com um toque)
+  "doc_reconstruct",       // 05: Recuperar Documento (juntar 3 ou 4 fragmentos de documento rasgado)
+  "cipher_breaker",        // 06: Decifrar Código (inserir senha curta obtida em evidência)
+  "signal_memory",         // 07: Interceptar Sinal (repetir 3 ou 4 símbolos/sinais apresentados)
+  "evidence_analysis",     // 08: Analisar Evidência (identificar diferenças relevantes entre fotos/documentos)
+  // Aliases para retrocompatibilidade
+  "log_audit",
+  "trace_pattern",
+  "chronology_order",
+  "frequency_tune",
+  "anomaly_detect",
+  "seal_auth",
+  "terminal_sync",
+  "packet_reassembly",
 ]);
 export type MinigameId = z.infer<typeof MinigameIdSchema>;
 
@@ -154,6 +163,7 @@ export interface MinigameChallengeData {
   minigameId: MinigameId;
   seed: string;
   difficulty: number;
+  difficultyLevel?: MinigameDifficulty;
   timeLimitSeconds: number;
   params: Record<string, any>;
 }
