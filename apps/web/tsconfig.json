@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@alibi/contracts": ["../../packages/contracts/src/index.ts"],
+      "@alibi/game-engine": ["../../packages/game-engine/src/index.ts"],
+      "@alibi/minigames": ["../../packages/minigames/src/index.ts"],
+      "@alibi/location": ["../../packages/location/src/index.ts"],
+      "@alibi/evidence-engine": ["../../packages/evidence-engine/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

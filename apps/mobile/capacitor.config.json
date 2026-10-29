@@ -1,0 +1,18 @@
+{
+  "appId": "com.alibi.game",
+  "appName": "ÁLIBI",
+  "webDir": "../web/dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": true
+  },
+  "plugins": {
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "Escaneando beacons dos cômodos da casa...",
+        "cancel": "Cancelar",
+        "availableDevices": "Transmissores detectados"
+      }
+    }
+  }
+}

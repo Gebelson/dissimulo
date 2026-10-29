@@ -1,0 +1,20 @@
+{
+  "name": "alibi-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @alibi/game-server --filter @alibi/web dev",
+    "dev:server": "pnpm --filter @alibi/game-server dev",
+    "dev:web": "pnpm --filter @alibi/web dev",
+    "build": "pnpm -r run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sim": "pnpm --filter @alibi/game-server sim"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

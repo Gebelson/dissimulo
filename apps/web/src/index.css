@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0B1018;
+  color: #F4F7FB;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Safe area insets for notches & home bars on mobile */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* Custom glow borders & forensic aesthetic */
+.forensic-panel {
+  background-color: #151D29;
+  border: 1px solid #202C3B;
+  border-radius: 16px;
+}
+
+.forensic-panel-cyan {
+  background-color: #151D29;
+  border: 1px solid rgba(114, 210, 222, 0.35);
+  box-shadow: 0 0 15px rgba(114, 210, 222, 0.08);
+}
+
+.forensic-panel-danger {
+  background-color: #151D29;
+  border: 1px solid rgba(243, 107, 122, 0.4);
+  box-shadow: 0 0 15px rgba(243, 107, 122, 0.12);
+}
+
+.forensic-panel-eco {
+  background-color: #151D29;
+  border: 1px solid rgba(169, 155, 255, 0.35);
+  box-shadow: 0 0 15px rgba(169, 155, 255, 0.08);
+}
+
+/* Animated scan line */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}

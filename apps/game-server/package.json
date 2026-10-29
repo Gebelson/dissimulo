@@ -1,0 +1,25 @@
+{
+  "name": "@alibi/game-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "sim": "tsx src/simulation.ts"
+  },
+  "dependencies": {
+    "@alibi/contracts": "workspace:*",
+    "@alibi/game-engine": "workspace:*",
+    "@alibi/minigames": "workspace:*",
+    "@alibi/evidence-engine": "workspace:*",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
