@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PublicGameState, PlayerPrivateView } from "@alibi/contracts";
+import { AlibiLogo } from "./ui/AlibiLogo";
 import {
   Users,
   Play,
@@ -11,6 +12,8 @@ import {
   Smartphone,
   Shield,
   HelpCircle,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 import { sound } from "../lib/audio";
 
@@ -45,48 +48,39 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe">
+    <div className="min-h-screen bg-background p-4 flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
       {/* Brand Header */}
       <div className="space-y-4 pt-4 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-elevated border border-border text-xs text-investigation font-mono">
-          <Shield className="w-3.5 h-3.5" /> ÁLIBI // FORENSIC NOIR
-        </div>
+        <AlibiLogo size="lg" />
 
-        <h1 className="text-3xl font-bold font-display tracking-tight text-primary">
-          ÁLIBI
-        </h1>
-        <p className="text-xs text-secondary italic">
-          "Ninguém tem a história inteira."
-        </p>
-
-        {/* Room Code Banner */}
-        <div className="forensic-panel p-4 flex items-center justify-between mt-4">
+        {/* Room Code Card */}
+        <div className="game-panel p-4 flex items-center justify-between mt-4">
           <div className="text-left">
-            <span className="text-[10px] text-secondary font-mono uppercase block">
-              CÓDIGO DE ACESSO DA SALA
+            <span className="text-[9px] text-muted font-mono uppercase font-bold tracking-widest block">
+              CÓDIGO DE ENTRADA NA SALA
             </span>
-            <span className="text-2xl font-mono font-bold tracking-widest text-investigation">
+            <span className="text-3xl font-mono font-extrabold tracking-widest text-investigation">
               {publicState.roomCode}
             </span>
           </div>
+
           <button
             onClick={handleCopyCode}
-            className="p-2.5 bg-surface-elevated hover:bg-surface border border-border rounded-xl text-xs font-semibold flex items-center gap-1.5 active:scale-95 text-secondary hover:text-primary"
+            className="px-3 py-2 bg-surface-elevated hover:bg-surface border border-border rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 active:scale-95 text-secondary hover:text-primary transition-all"
           >
-            <Copy className="w-4 h-4" />
+            <Copy className="w-4 h-4 text-investigation" />
             <span>{copied ? "Copiado!" : "Copiar"}</span>
           </button>
         </div>
       </div>
 
-      {/* Players List */}
-      <div className="my-6 space-y-3 flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between text-xs text-secondary">
+      {/* Connected Players List */}
+      <div className="my-5 space-y-2.5 flex-1 overflow-y-auto">
+        <div className="flex items-center justify-between text-xs text-secondary px-1 font-mono">
           <span className="flex items-center gap-1.5 font-bold">
-            <Users className="w-4 h-4 text-investigation" /> Participantes na Casa (
-            {publicState.players.length}/8)
+            <Users className="w-4 h-4 text-investigation" /> Participantes ({publicState.players.length}/8)
           </span>
-          <span className="font-mono text-[10px]">MÍNIMO 4 JOGADORES</span>
+          <span className="text-[10px] text-muted">MÍNIMO 4 JOGADORES</span>
         </div>
 
         <div className="space-y-2">
@@ -97,35 +91,35 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 key={player.id}
                 className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
                   isMe
-                    ? "bg-surface-elevated border-investigation/60 shadow-sm"
+                    ? "bg-investigation/10 border-investigation/60 shadow-sm"
                     : "bg-surface border-border"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-background border border-border flex items-center justify-center font-bold text-xs text-primary font-mono">
+                  <div className="w-9 h-9 rounded-xl bg-surface-elevated border border-border flex items-center justify-center font-bold text-xs text-primary font-mono shadow-inner">
                     {player.name.charAt(0)}
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                      {player.name} {isMe && "(Você)"}
+                    <span className="text-xs font-bold text-primary font-display flex items-center gap-1.5">
+                      {player.name} {isMe && <span className="text-[10px] text-investigation font-mono">(Você)</span>}
                       {player.isHost && (
-                        <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-1 py-0.5 rounded border border-investigation/30">
+                        <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-1 py-0.2 rounded border border-investigation/30 font-bold">
                           HOST
                         </span>
                       )}
                     </span>
-                    <span className="text-[10px] text-secondary font-mono">
+                    <span className="text-[10px] text-muted font-mono block">
                       {player.isReady ? "Pronto para jogar" : "Aguardando confirmação"}
                     </span>
                   </div>
                 </div>
 
                 {player.isReady ? (
-                  <span className="flex items-center gap-1 text-[10px] font-mono text-protection bg-protection/10 px-2 py-1 rounded-lg border border-protection/20 font-bold">
+                  <span className="flex items-center gap-1 text-[10px] font-mono text-protection bg-protection/15 px-2.5 py-1 rounded-lg border border-protection/30 font-bold">
                     <CheckCircle2 className="w-3.5 h-3.5" /> PRONTO
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono text-secondary bg-surface-elevated px-2 py-1 rounded-lg border border-border">
+                  <span className="text-[10px] font-mono text-muted bg-surface-elevated px-2 py-0.5 rounded border border-border">
                     PENDENTE
                   </span>
                 )}
@@ -135,37 +129,35 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
         </div>
       </div>
 
-      {/* Bottom Actions */}
+      {/* Action Controls */}
       <div className="space-y-3 pt-2">
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              sound.playTap();
-              onOpenRules();
-            }}
-            className="flex-1 py-2.5 bg-surface-elevated border border-border hover:border-investigation/50 text-secondary hover:text-primary rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95"
-          >
-            <BookOpen className="w-4 h-4 text-investigation" /> Como Jogar (Tutorial)
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            sound.playTap();
+            onOpenRules();
+          }}
+          className="w-full py-2.5 bg-surface-elevated border border-border hover:border-investigation/50 text-secondary hover:text-primary rounded-xl text-xs font-mono font-semibold flex items-center justify-center gap-1.5 active:scale-95"
+        >
+          <BookOpen className="w-4 h-4 text-investigation" /> Como Jogar (Briefing e Regras)
+        </button>
 
-        {/* Ready toggle */}
+        {/* Ready Toggle Button */}
         <button
           onClick={() => {
             sound.playTap();
             onSetReady(!isReady);
           }}
-          className={`w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg ${
+          className={`w-full py-3.5 rounded-xl text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg ${
             isReady
-              ? "bg-protection text-background shadow-protection/20"
-              : "bg-surface-elevated border border-investigation text-investigation hover:bg-investigation/10"
+              ? "tactile-btn-surface border-protection text-protection"
+              : "tactile-btn-primary"
           }`}
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>{isReady ? "Você está Pronto!" : "Confirmar Que Estou Pronto"}</span>
         </button>
 
-        {/* Host Start Game button */}
+        {/* Host Start Game Button */}
         {isHost && (
           <button
             onClick={() => {
@@ -173,10 +165,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
               onStartGame();
             }}
             disabled={!canStart}
-            className={`w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 shadow-xl transition-all ${
+            className={`w-full py-3.5 rounded-xl text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl ${
               canStart
-                ? "bg-investigation text-background hover:bg-investigation/90 shadow-investigation/20 cursor-pointer"
-                : "bg-surface-elevated text-secondary border border-border opacity-50 cursor-not-allowed"
+                ? "tactile-btn-primary"
+                : "bg-surface-elevated text-muted border border-border opacity-50 cursor-not-allowed"
             }`}
           >
             <Play className="w-4 h-4 fill-current" />

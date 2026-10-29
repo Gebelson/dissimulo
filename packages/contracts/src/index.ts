@@ -349,6 +349,7 @@ export interface PlayerPrivateView {
   role?: Role;
   status: PlayerStatus;
   currentRoomId: string;
+  locationReliability: "declared" | "beacon" | "simulated";
   missions: MissionInstance[]; // Sanitized!
   privateEvidence: Evidence[];
   connections: CaseDossierConnection[];

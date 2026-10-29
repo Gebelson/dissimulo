@@ -7,52 +7,145 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #0B1018;
-  color: #F4F7FB;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: #070B12;
+  color: #F8FAFC;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.04) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
 }
 
-/* Safe area insets for notches & home bars on mobile */
+/* Safe area insets for notches & bottom bars on mobile */
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(env(safe-area-inset-top, 0px), 12px);
 }
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
 }
 
-/* Custom glow borders & forensic aesthetic */
-.forensic-panel {
-  background-color: #151D29;
-  border: 1px solid #202C3B;
-  border-radius: 16px;
+/* CRT Scanline & Grain Overlay */
+.crt-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
 }
 
-.forensic-panel-cyan {
-  background-color: #151D29;
-  border: 1px solid rgba(114, 210, 222, 0.35);
-  box-shadow: 0 0 15px rgba(114, 210, 222, 0.08);
+/* Tactile HUD Panels with chamfered look */
+.game-panel {
+  background: linear-gradient(180deg, #131D2D 0%, #0D1522 100%);
+  border: 1px solid #203046;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
 }
 
-.forensic-panel-danger {
-  background-color: #151D29;
-  border: 1px solid rgba(243, 107, 122, 0.4);
-  box-shadow: 0 0 15px rgba(243, 107, 122, 0.12);
+.game-panel-cyan {
+  background: linear-gradient(180deg, #112338 0%, #0A1624 100%);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.12), inset 0 1px 0 rgba(0, 240, 255, 0.3);
 }
 
-.forensic-panel-eco {
-  background-color: #151D29;
-  border: 1px solid rgba(169, 155, 255, 0.35);
-  box-shadow: 0 0 15px rgba(169, 155, 255, 0.08);
+.game-panel-danger {
+  background: linear-gradient(180deg, #2A111A 0%, #17080E 100%);
+  border: 1px solid rgba(255, 42, 85, 0.5);
+  box-shadow: 0 0 25px rgba(255, 42, 85, 0.18), inset 0 1px 0 rgba(255, 42, 85, 0.4);
 }
 
-/* Animated scan line */
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
+.game-panel-eco {
+  background: linear-gradient(180deg, #1E1233 0%, #120A20 100%);
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(168, 85, 247, 0.3);
 }
 
-.animate-scanline {
-  animation: scanline 8s linear infinite;
+/* Tactical Button Styling with 3D Depth */
+.tactile-btn-primary {
+  background: linear-gradient(180deg, #00F0FF 0%, #00B4D8 100%);
+  color: #04070B;
+  font-weight: 700;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #0077B6, 0 8px 16px rgba(0, 240, 255, 0.3);
+  transition: all 0.08s ease-in-out;
+}
+.tactile-btn-primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0077B6, 0 3px 8px rgba(0, 240, 255, 0.2);
+}
+
+.tactile-btn-danger {
+  background: linear-gradient(180deg, #FF2A55 0%, #D90429 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #9B031E, 0 8px 16px rgba(255, 42, 85, 0.35);
+  transition: all 0.08s ease-in-out;
+}
+.tactile-btn-danger:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #9B031E, 0 3px 8px rgba(255, 42, 85, 0.2);
+}
+
+.tactile-btn-surface {
+  background: linear-gradient(180deg, #1E2B3E 0%, #131C2A 100%);
+  color: #F8FAFC;
+  font-weight: 600;
+  border: 1px solid #2B3D55;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #0C121D, 0 6px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.08s ease-in-out;
+}
+.tactile-btn-surface:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0C121D, 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Forensic HUD Corner brackets */
+.hud-corner {
+  position: relative;
+}
+.hud-corner::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #00F0FF;
+  border-left: 2px solid #00F0FF;
+}
+.hud-corner::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #00F0FF;
+  border-right: 2px solid #00F0FF;
+}
+
+/* Classified stamp look */
+.classified-stamp {
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 2px solid rgba(255, 42, 85, 0.7);
+  color: #FF2A55;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  display: inline-block;
+  font-weight: 800;
 }

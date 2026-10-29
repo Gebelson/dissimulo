@@ -721,6 +721,7 @@ export class GameState {
       role: player.role,
       status: player.status,
       currentRoomId: player.currentRoomId,
+      locationReliability: player.locationReliability,
       missions: playerMissions,
       privateEvidence,
       connections: this.connections,

@@ -105,7 +105,8 @@ export async function runFullEightPlayerSimulation(): Promise<boolean> {
   console.log(`[AÇÃO] ${discoverer.name} descobre o corpo e relata com o código...`);
   room.reportBody(discoverer.id, target2.id, target2.victimDeathCode);
 
-  if (target2.status !== "ECO") throw new Error("Vítima descoberta deveria transicionar para ECO.");
+  const updatedTarget2 = room.players.get(target2.id)!;
+  if (updatedTarget2.status !== "ECO") throw new Error("Vítima descoberta deveria transicionar para ECO.");
   if (room.phase !== "MEETING") throw new Error("Reunião não foi iniciada.");
   console.log(`[PASS] Corpo reportado. Vítima virou ECO. Reunião de emergência convocada.`);
 

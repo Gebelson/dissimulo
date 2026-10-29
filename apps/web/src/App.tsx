@@ -6,6 +6,9 @@ import {
   MinigameChallengeData,
 } from "@alibi/contracts";
 import { sound } from "./lib/audio";
+import { AlibiLogo } from "./components/ui/AlibiLogo";
+import { RoleRevealModal } from "./components/ui/RoleRevealModal";
+import { OnboardingOverlay } from "./components/ui/OnboardingOverlay";
 import { HomeTab } from "./components/HomeTab";
 import { MissionsTab } from "./components/MissionsTab";
 import { ExploreTab } from "./components/ExploreTab";
@@ -27,6 +30,7 @@ import {
   Volume2,
   VolumeX,
   Skull,
+  Radio,
 } from "lucide-react";
 
 export function App() {
@@ -61,6 +65,8 @@ export function App() {
   const [showDeathModal, setShowDeathModal] = useState(false);
   const [showHostPanel, setShowHostPanel] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showRoleReveal, setShowRoleReveal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const socketRef = useRef<WebSocket | null>(null);
@@ -126,18 +132,12 @@ export function App() {
     setSoundEnabled(!soundEnabled);
   };
 
-  // Join match form
+  // 1. WELCOME / JOIN SCREEN
   if (!joined) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-5">
-          <div className="text-center space-y-1">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-investigation font-bold">
-              INVESTIGAÇÃO CRIMINAL PRESENCIAL
-            </span>
-            <h1 className="text-3xl font-bold font-display text-primary">ÁLIBI</h1>
-            <p className="text-xs text-secondary italic">Ninguém tem a história inteira.</p>
-          </div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 select-none">
+        <div className="w-full max-w-sm game-panel p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
+          <AlibiLogo size="lg" />
 
           <form
             onSubmit={(e) => {
@@ -147,37 +147,41 @@ export function App() {
               localStorage.setItem("alibi_name", playerName);
               setJoined(true);
             }}
-            className="space-y-4"
+            className="space-y-4 pt-2"
           >
             <div>
-              <label className="text-xs text-secondary font-bold block mb-1">SEU NOME:</label>
+              <label className="text-[10px] font-mono text-muted uppercase font-bold tracking-wider block mb-1">
+                SEU CODINOME DE CAMPO:
+              </label>
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Ex: Arthur"
-                className="w-full bg-background border border-border rounded-xl p-3 text-xs text-primary outline-none focus:border-investigation"
+                placeholder="Ex: Inspetor Arthur"
+                className="w-full bg-background border border-border rounded-xl p-3 text-xs text-primary outline-none focus:border-investigation font-sans"
                 required
               />
             </div>
 
             <div>
-              <label className="text-xs text-secondary font-bold block mb-1">CÓDIGO DA SALA:</label>
+              <label className="text-[10px] font-mono text-muted uppercase font-bold tracking-wider block mb-1">
+                CÓDIGO DE ENTRADA NA RESIDÊNCIA:
+              </label>
               <input
                 type="text"
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder="Ex: CASA8"
-                className="w-full bg-background border border-border rounded-xl p-3 text-xs font-mono font-bold text-investigation tracking-widest outline-none focus:border-investigation"
+                className="w-full bg-background border border-border rounded-xl p-3 text-sm font-mono font-bold text-investigation tracking-widest outline-none focus:border-investigation uppercase"
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-investigation text-background rounded-xl font-bold text-xs uppercase tracking-wider active:scale-95 shadow-lg shadow-investigation/20"
+              className="w-full py-3.5 tactile-btn-primary rounded-xl font-display font-bold text-xs uppercase tracking-wider active:scale-95 transition-all shadow-lg shadow-investigation/20"
             >
-              Entrar na Casa
+              Conectar ao Terminal da Casa
             </button>
           </form>
         </div>
@@ -185,17 +189,20 @@ export function App() {
     );
   }
 
-  // Loading state while syncing
+  // 2. CONNECTING STATE
   if (!publicState || !privateState) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center space-y-3">
-        <div className="w-10 h-10 border-2 border-investigation border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-mono text-secondary">Conectando ao ÁLIBI Server...</span>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center space-y-4 select-none">
+        <AlibiLogo size="sm" subtitle={false} />
+        <div className="w-10 h-10 border-2 border-investigation border-t-transparent rounded-full animate-spin shadow-hud-cyan" />
+        <span className="text-xs font-mono text-secondary tracking-widest">
+          ESTABELECENDO CANAL SEGURO...
+        </span>
       </div>
     );
   }
 
-  // LOBBY PHASE
+  // 3. LOBBY PHASE
   if (publicState.phase === "LOBBY") {
     return (
       <>
@@ -204,14 +211,14 @@ export function App() {
           privateState={privateState}
           onSetReady={(ready) => sendAction({ type: "SET_READY", ready })}
           onStartGame={() => sendAction({ type: "START_GAME" })}
-          onOpenRules={() => setShowRules(true)}
+          onOpenRules={() => setShowOnboarding(true)}
         />
-        {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+        {showOnboarding && <OnboardingOverlay onDismiss={() => setShowOnboarding(false)} />}
       </>
     );
   }
 
-  // RESULTS PHASE
+  // 4. RESULTS PHASE
   if (publicState.phase === "RESULTS") {
     return (
       <ResultsScreen
@@ -227,21 +234,21 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
-      {/* Top Header */}
-      <header className="px-4 py-3 border-b border-border bg-surface flex items-center justify-between sticky top-0 z-40">
+      {/* TOP DIEGETIC HUD BAR */}
+      <header className="px-4 py-2.5 border-b border-border bg-surface/95 backdrop-blur-md flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <span className="font-display font-bold text-sm text-primary tracking-wide">ÁLIBI</span>
-          <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-1.5 py-0.5 rounded border border-investigation/30">
+          <AlibiLogo size="sm" subtitle={false} />
+          <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-2 py-0.5 rounded border border-investigation/30 font-bold">
             {roomCode}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={toggleSound}
-            className="p-1.5 text-secondary hover:text-primary rounded-lg active:scale-95"
+            className="p-2 text-secondary hover:text-primary rounded-xl active:scale-95 bg-surface-elevated border border-border"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-danger" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-investigation" /> : <VolumeX className="w-4 h-4 text-danger" />}
           </button>
 
           {isHost && (
@@ -250,7 +257,7 @@ export function App() {
                 sound.playTap();
                 setShowHostPanel(true);
               }}
-              className="p-1.5 text-secondary hover:text-investigation rounded-lg active:scale-95"
+              className="p-2 text-secondary hover:text-investigation rounded-xl active:scale-95 bg-surface-elevated border border-border"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -258,13 +265,14 @@ export function App() {
         </div>
       </header>
 
-      {/* Main Tab Content */}
+      {/* MAIN SCREEN BODY */}
       <main className="flex-1 p-4 overflow-y-auto">
         {currentTab === "HOME" && (
           <HomeTab
             publicState={publicState}
             privateState={privateState}
             onOpenKillerPanel={() => setShowKillerPanel(true)}
+            onOpenRoleReveal={() => setShowRoleReveal(true)}
             onSelectMission={(mId) => {
               setCurrentTab("MISSIONS");
             }}
@@ -308,20 +316,22 @@ export function App() {
         )}
       </main>
 
-      {/* 4-Tab Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-md border-t border-border z-40 max-w-md mx-auto">
-        <div className="grid grid-cols-4 h-16">
+      {/* 4-TAB TACTICAL BOTTOM NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface/98 backdrop-blur-xl border-t border-border z-40 max-w-md mx-auto shadow-2xl">
+        <div className="grid grid-cols-4 h-16 items-center">
           <button
             onClick={() => {
               sound.playTap();
               setCurrentTab("HOME");
             }}
-            className={`flex flex-col items-center justify-center gap-1 active:scale-95 transition-colors ${
-              currentTab === "HOME" ? "text-investigation font-bold" : "text-secondary"
+            className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all ${
+              currentTab === "HOME"
+                ? "text-investigation font-bold scale-105"
+                : "text-secondary hover:text-primary"
             }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-[10px]">Início</span>
+            <span className="text-[10px] font-mono tracking-wider">Início</span>
           </button>
 
           <button
@@ -329,14 +339,16 @@ export function App() {
               sound.playTap();
               setCurrentTab("MISSIONS");
             }}
-            className={`flex flex-col items-center justify-center gap-1 active:scale-95 transition-colors relative ${
-              currentTab === "MISSIONS" ? "text-investigation font-bold" : "text-secondary"
+            className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all relative ${
+              currentTab === "MISSIONS"
+                ? "text-investigation font-bold scale-105"
+                : "text-secondary hover:text-primary"
             }`}
           >
             <FileCheck2 className="w-5 h-5" />
-            <span className="text-[10px]">Missões</span>
+            <span className="text-[10px] font-mono tracking-wider">Missões</span>
             {privateState.missions.filter((m) => m.status === "AVAILABLE").length > 0 && (
-              <span className="absolute top-2.5 right-6 w-2 h-2 rounded-full bg-investigation animate-pulse" />
+              <span className="absolute top-2 right-6 w-2 h-2 rounded-full bg-investigation shadow-hud-cyan animate-pulse" />
             )}
           </button>
 
@@ -345,12 +357,14 @@ export function App() {
               sound.playTap();
               setCurrentTab("EXPLORE");
             }}
-            className={`flex flex-col items-center justify-center gap-1 active:scale-95 transition-colors ${
-              currentTab === "EXPLORE" ? "text-investigation font-bold" : "text-secondary"
+            className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all ${
+              currentTab === "EXPLORE"
+                ? "text-investigation font-bold scale-105"
+                : "text-secondary hover:text-primary"
             }`}
           >
             <Compass className="w-5 h-5" />
-            <span className="text-[10px]">Explorar</span>
+            <span className="text-[10px] font-mono tracking-wider">Explorar</span>
           </button>
 
           <button
@@ -358,12 +372,14 @@ export function App() {
               sound.playTap();
               setCurrentTab("DOSSIER");
             }}
-            className={`flex flex-col items-center justify-center gap-1 active:scale-95 transition-colors ${
-              currentTab === "DOSSIER" ? "text-investigation font-bold" : "text-secondary"
+            className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all ${
+              currentTab === "DOSSIER"
+                ? "text-investigation font-bold scale-105"
+                : "text-secondary hover:text-primary"
             }`}
           >
             <FolderSearch className="w-5 h-5" />
-            <span className="text-[10px]">Dossiê</span>
+            <span className="text-[10px] font-mono tracking-wider">Dossiê</span>
           </button>
         </div>
       </nav>
@@ -379,7 +395,7 @@ export function App() {
               missionId: activeMissionId,
               resultToken: "token_verified",
               success,
-              completionTimeMs: 15000,
+              completionTimeMs: 12000,
             });
             setActiveChallenge(null);
             setActiveMissionId(null);
@@ -391,7 +407,7 @@ export function App() {
         />
       )}
 
-      {/* 2. Killer Dashboard Modal */}
+      {/* 2. Killer Secret Panel */}
       {showKillerPanel && (
         <KillerModal
           publicState={publicState}
@@ -409,7 +425,16 @@ export function App() {
         />
       )}
 
-      {/* 3. Instant Death Screen */}
+      {/* 3. Role Reveal Secret Ceremony */}
+      {showRoleReveal && (
+        <RoleRevealModal
+          role={privateState.role}
+          playerName={playerName}
+          onDismiss={() => setShowRoleReveal(false)}
+        />
+      )}
+
+      {/* 4. Instant Death Screen */}
       {showDeathModal && (
         <DeathModal
           deathCode={privateState.victimDeathCode}
@@ -417,7 +442,7 @@ export function App() {
         />
       )}
 
-      {/* 4. Emergency Meeting / Body Reported Modal */}
+      {/* 5. Emergency Meeting / Body Reported */}
       {publicState.activeMeeting && (
         <MeetingModal
           publicState={publicState}
@@ -426,7 +451,7 @@ export function App() {
         />
       )}
 
-      {/* 5. Host Admin Panel */}
+      {/* 6. Host Admin Panel */}
       {showHostPanel && (
         <HostPanelModal
           publicState={publicState}
@@ -436,6 +461,9 @@ export function App() {
           onRestart={() => sendAction({ type: "HOST_RESTART" })}
         />
       )}
+
+      {/* 7. Onboarding Tutorial Walkthrough */}
+      {showOnboarding && <OnboardingOverlay onDismiss={() => setShowOnboarding(false)} />}
     </div>
   );
 }

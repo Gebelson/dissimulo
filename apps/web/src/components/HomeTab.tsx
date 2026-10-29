@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { PublicGameState, PlayerPrivateView } from "@alibi/contracts";
 import {
-  ShieldAlert,
   Clock,
   Skull,
   Radio,
   Eye,
   Crosshair,
-  Sparkles,
   MapPin,
   CheckCircle,
+  AlertTriangle,
+  ChevronRight,
+  Shield,
+  Activity,
+  Zap,
 } from "lucide-react";
 import { sound } from "../lib/audio";
 
@@ -17,6 +20,7 @@ interface HomeTabProps {
   publicState: PublicGameState;
   privateState: PlayerPrivateView;
   onOpenKillerPanel: () => void;
+  onOpenRoleReveal: () => void;
   onSelectMission: (missionId: string) => void;
 }
 
@@ -24,10 +28,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   publicState,
   privateState,
   onOpenKillerPanel,
+  onOpenRoleReveal,
   onSelectMission,
 }) => {
-  const [showRoleSecret, setShowRoleSecret] = useState(false);
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -38,197 +41,204 @@ export const HomeTab: React.FC<HomeTabProps> = ({
   const isEco = privateState.status === "ECO";
   const isDead = privateState.status === "DEAD_UNDISCOVERED";
 
+  const availableMissions = privateState.missions.filter(
+    (m) => m.status === "AVAILABLE" || m.status === "IN_PROGRESS"
+  );
+
   return (
-    <div className="space-y-4 pb-20">
-      {/* Match Status Header */}
-      <div className="forensic-panel p-4 flex items-center justify-between">
+    <div className="space-y-4 pb-24 animate-in fade-in duration-300">
+      {/* DIEGETIC TOP HUD: Time, Phase & Survivor Counter */}
+      <div className="game-panel p-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-surface-elevated flex items-center justify-center text-investigation border border-border">
+          <div className="w-10 h-10 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-investigation shadow-sm">
             <Clock className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <span className="text-[10px] text-secondary font-mono tracking-wider block">
-              FASE ATUAL: {publicState.phase}
+            <span className="text-[9px] font-mono tracking-widest text-secondary uppercase block">
+              FASE // {publicState.phase}
             </span>
-            <span className="text-xl font-bold font-display text-primary">
+            <span className="text-xl font-display font-extrabold text-primary tracking-wider">
               {formatTime(publicState.phaseTimeRemainingSeconds)}
             </span>
           </div>
         </div>
+
         <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="flex items-center gap-1 text-protection bg-protection/10 px-2 py-1 rounded-lg border border-protection/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-protection/10 border border-protection/30 text-protection font-bold">
             <span className="w-2 h-2 rounded-full bg-protection animate-ping" />
-            {publicState.aliveCount} VIVOS
-          </span>
+            <span>{publicState.aliveCount} VIVOS</span>
+          </div>
+
           {publicState.deadCount > 0 && (
-            <span className="flex items-center gap-1 text-danger bg-danger/10 px-2 py-1 rounded-lg border border-danger/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-danger/10 border border-danger/30 text-danger font-bold">
               <Skull className="w-3.5 h-3.5" />
-              {publicState.deadCount} MORTOS
-            </span>
+              <span>{publicState.deadCount}</span>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Role Card with Secret Hold-to-Reveal */}
+      {/* TACTICAL IDENTITY CARD */}
       <div
         className={`p-4 rounded-2xl border transition-all ${
           isKiller
-            ? "forensic-panel-danger"
+            ? "game-panel-danger"
             : isEco
-            ? "forensic-panel-eco"
-            : "forensic-panel-cyan"
+            ? "game-panel-eco"
+            : "game-panel-cyan"
         }`}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-bold tracking-widest uppercase text-secondary">
-            Sua Identidade Secreta
+          <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-muted">
+            IDENTIDADE EM CAMPO
           </span>
           <button
-            onMouseDown={() => {
+            onClick={() => {
               sound.playTap();
-              setShowRoleSecret(true);
+              onOpenRoleReveal();
             }}
-            onMouseUp={() => setShowRoleSecret(false)}
-            onTouchStart={() => {
-              sound.playTap();
-              setShowRoleSecret(true);
-            }}
-            onTouchEnd={() => setShowRoleSecret(false)}
-            className="text-xs text-investigation flex items-center gap-1 bg-surface-elevated px-2.5 py-1 rounded-lg border border-border active:scale-95"
+            className="text-[10px] font-mono text-investigation hover:text-white flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-elevated border border-border hover:border-investigation active:scale-95 transition-all"
           >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Segure para Ver</span>
+            <Eye className="w-3 h-3" />
+            <span>Examinar Credencial</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center font-bold text-lg font-mono border border-border">
-            {showRoleSecret ? (
-              isKiller ? "🗡️" : isEco ? "👻" : "🔍"
-            ) : (
-              "🔒"
-            )}
-          </div>
-          <div>
-            <h2 className="text-lg font-bold font-display text-primary">
-              {showRoleSecret ? privateState.role || "CIVILIAN" : "••••••••"}
-            </h2>
-            <p className="text-xs text-secondary">
-              {showRoleSecret
-                ? getRoleDescription(privateState.role)
-                : "Mantenha seu papel protegido dos outros participantes."}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-12 h-12 rounded-xl flex items-center justify-center font-mono font-extrabold text-xl border ${
+                isKiller
+                  ? "bg-danger/20 border-danger text-danger shadow-hud-crimson"
+                  : isEco
+                  ? "bg-eco/20 border-eco text-eco shadow-hud-eco"
+                  : "bg-investigation/20 border-investigation text-investigation shadow-hud-cyan"
+              }`}
+            >
+              {isKiller ? "🗡️" : isEco ? "👻" : "🔍"}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold font-display text-primary tracking-wide">
+                {privateState.role || "CIVILIAN"}
+              </h2>
+              <span className="text-xs text-secondary font-mono">
+                {isKiller
+                  ? "Facção Clandestina (Elimine sem ser visto)"
+                  : isEco
+                  ? "Modo Espectro Ativo"
+                  : "Facção dos Sobreviventes"}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Killer Action Button */}
+        {/* KILLER OPERATIONS SHORTCUT */}
         {isKiller && (
-          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-            <span className="text-xs text-danger font-semibold flex items-center gap-1.5">
-              <Crosshair className="w-4 h-4" /> Plano Clandestino
-            </span>
+          <div className="mt-4 pt-3 border-t border-danger/30 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs text-danger font-bold font-mono">
+              <Crosshair className="w-4 h-4 animate-spin" />
+              <span>SABOTAGENS & ARMADILHAS</span>
+            </div>
             <button
               onClick={() => {
                 sound.playTap();
                 onOpenKillerPanel();
               }}
-              className="px-3 py-1.5 bg-danger hover:bg-danger/90 text-white rounded-xl text-xs font-bold active:scale-95 shadow-md shadow-danger/20"
+              className="px-3.5 py-1.5 tactile-btn-danger text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
             >
-              Armadilhas & Sabotagem
+              <span>Abrir Console</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
       </div>
 
-      {/* Disarm Notification Banner */}
+      {/* DISARM NOTIFICATION TOAST / BANNER */}
       {privateState.disarmAlertNotification && (
-        <div className="p-3 bg-protection/20 border border-protection/40 rounded-xl text-protection flex items-center gap-2 text-xs">
+        <div className="p-3.5 bg-protection/15 border border-protection/40 rounded-xl text-protection flex items-center gap-2.5 text-xs font-semibold shadow-md animate-in slide-in-from-top-2">
           <CheckCircle className="w-4 h-4 shrink-0" />
           <span>{privateState.disarmAlertNotification.message}</span>
         </div>
       )}
 
-      {/* Current Room Indicator */}
-      <div className="forensic-panel p-3.5 flex items-center justify-between">
+      {/* CURRENT ROOM SENSOR BAR */}
+      <div className="game-panel p-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <MapPin className="w-4 h-4 text-investigation" />
+          <div className="w-8 h-8 rounded-lg bg-surface-elevated flex items-center justify-center text-investigation border border-border">
+            <MapPin className="w-4 h-4" />
+          </div>
           <div>
-            <span className="text-[10px] text-secondary uppercase font-bold block">
-              Ambiente Detectado
+            <span className="text-[9px] font-mono text-muted uppercase font-bold block">
+              LOCALIZAÇÃO ATUAL
             </span>
-            <span className="text-sm font-semibold text-primary capitalize">
+            <span className="text-sm font-bold text-primary font-display capitalize">
               {privateState.currentRoomId.replace("_", " ")}
             </span>
           </div>
         </div>
-        <span className="text-[10px] font-mono text-secondary bg-surface-elevated px-2 py-1 rounded border border-border">
-          GPS: {privateState.status === "ALIVE" ? "ATIVO" : "INATIVO"}
-        </span>
-      </div>
-
-      {/* Priority Missions */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-secondary uppercase tracking-wider">
-            Missões Prioritárias
-          </h3>
-          <span className="text-[10px] text-investigation font-mono">
-            {privateState.missions.filter((m) => m.status === "AVAILABLE").length} DISPONÍVEIS
+        <div className="text-right">
+          <span className="text-[10px] font-mono text-protection bg-protection/10 px-2 py-0.5 rounded border border-protection/20 font-bold block">
+            ● CONECTADO
+          </span>
+          <span className="text-[9px] font-mono text-muted uppercase mt-0.5 block">
+            MODO {privateState.status === "ALIVE" ? "PRESENCIAL" : "ECO"}
           </span>
         </div>
+      </div>
 
-        {privateState.missions.length === 0 ? (
-          <div className="p-6 text-center forensic-panel text-secondary text-xs">
-            Nenhuma missão pendente. Aguarde o agendador global.
+      {/* PRIORITY MISSIONS SECTION */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs font-bold text-secondary uppercase tracking-wider font-mono flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-investigation" /> Missões de Campo ({availableMissions.length})
+          </h3>
+          <span className="text-[10px] text-muted font-mono">TOQUE PARA INSPECIONAR</span>
+        </div>
+
+        {availableMissions.length === 0 ? (
+          <div className="game-panel p-6 text-center text-secondary text-xs space-y-1">
+            <Shield className="w-6 h-6 text-muted mx-auto mb-1 opacity-60" />
+            <p className="font-semibold text-primary">Nenhuma missão pendente.</p>
+            <p className="text-muted text-[11px]">Aguarde o agendador pericial liberar novas tarefas.</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {privateState.missions
-              .filter((m) => m.status === "AVAILABLE" || m.status === "IN_PROGRESS")
-              .slice(0, 3)
-              .map((mission) => (
-                <div
-                  key={mission.id}
-                  onClick={() => {
-                    sound.playTap();
-                    onSelectMission(mission.id);
-                  }}
-                  className="forensic-panel p-3.5 hover:border-investigation active:scale-[0.99] transition-all cursor-pointer flex items-center justify-between"
-                >
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-mono uppercase text-investigation font-bold block">
+            {availableMissions.slice(0, 3).map((mission) => (
+              <div
+                key={mission.id}
+                onClick={() => {
+                  sound.playTap();
+                  onSelectMission(mission.id);
+                }}
+                className="game-panel p-3.5 hover:border-investigation active:scale-[0.98] transition-all cursor-pointer flex items-center justify-between"
+              >
+                <div className="space-y-1 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-investigation bg-investigation/10 px-1.5 py-0.5 rounded border border-investigation/20 font-bold">
                       {mission.category}
                     </span>
-                    <h4 className="text-sm font-bold text-primary">{mission.title}</h4>
-                    <p className="text-xs text-secondary line-clamp-1">{mission.description}</p>
+                    {mission.requiredRoomId && (
+                      <span className="text-[9px] font-mono text-muted capitalize">
+                        • {mission.requiredRoomId.replace("_", " ")}
+                      </span>
+                    )}
                   </div>
-                  <div className="ml-3 shrink-0">
-                    <span className="px-2.5 py-1 bg-surface-elevated border border-border text-[10px] font-bold rounded-lg text-primary">
-                      {mission.status === "IN_PROGRESS" ? "Em Curso" : "Iniciar"}
-                    </span>
-                  </div>
+                  <h4 className="text-sm font-bold text-primary font-display">{mission.title}</h4>
+                  <p className="text-xs text-secondary line-clamp-1 leading-snug">
+                    {mission.description}
+                  </p>
                 </div>
-              ))}
+                <div className="shrink-0">
+                  <span className="px-2.5 py-1.5 bg-surface-elevated border border-border text-xs font-mono font-bold rounded-xl text-investigation flex items-center gap-1">
+                    <span>Acessar</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
     </div>
   );
 };
-
-function getRoleDescription(role?: string): string {
-  switch (role) {
-    case "KILLER":
-      return "Elimine sobreviventes secretamente por meio de armadilhas digitais e desvie suspeitas.";
-    case "DETECTIVE":
-      return "Analise contradições em depoimentos e correlacione evidências periciais.";
-    case "MEDIC":
-      return "Conclua tarefas de proteção preventiva para neutralizar ameaças.";
-    case "TECHNICIAN":
-      return "Restaure circuitos auxiliares e inspecione anomalias de sistemas.";
-    case "INFORMANT":
-      return "Receba fragmentos de inteligência e decida com quem compartilhar.";
-    default:
-      return "Investigue a casa, resolva perícias e encontre o culpado antes do fim do tempo.";
-  }
-}

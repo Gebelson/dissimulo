@@ -30,7 +30,16 @@ import {
   PacketReassemblyChallenge,
 } from "@alibi/minigames";
 import { sound } from "../lib/audio";
-import { CheckCircle2, XCircle, RotateCcw, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  RotateCcw,
+  AlertTriangle,
+  Zap,
+  Terminal,
+  Clock,
+  Sparkles,
+} from "lucide-react";
 
 interface MinigamePlayerProps {
   challenge: MinigameChallengeData;
@@ -45,56 +54,94 @@ export const MinigamePlayer: React.FC<MinigamePlayerProps> = ({
 }) => {
   const [solved, setSolved] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(challenge.timeLimitSeconds || 35);
+
+  useEffect(() => {
+    if (solved) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleFail("Tempo esgotado!");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [solved]);
 
   const handleSuccess = () => {
     sound.playEvidenceChime();
     setSolved(true);
-    setTimeout(() => onComplete(true), 1200);
+    setTimeout(() => onComplete(true), 1100);
   };
 
   const handleFail = (msg = "Sequência incorreta.") => {
-    sound.vibrate(100);
+    sound.vibrate([100, 50, 100]);
     setErrorMsg(msg);
-    setTimeout(() => setErrorMsg(null), 1500);
+    setTimeout(() => setErrorMsg(null), 1600);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface border border-border rounded-2xl flex flex-col overflow-hidden shadow-2xl">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-surface-elevated">
-          <div>
-            <span className="text-xs uppercase tracking-widest text-investigation font-bold">
-              Desafio Pericial
-            </span>
-            <h3 className="text-lg font-bold text-primary font-display">
-              {getMinigameTitle(challenge.minigameId)}
-            </h3>
+    <div className="fixed inset-0 z-50 bg-black/92 backdrop-blur-xl flex flex-col items-center justify-center p-3 sm:p-4 select-none">
+      {/* TACTICAL HARDWARE FIELD CONSOLE CASING */}
+      <div className="w-full max-w-md bg-surface-elevated border-2 border-border rounded-3xl flex flex-col overflow-hidden shadow-2xl relative">
+        {/* Hardware Corner Rivets / Screws */}
+        <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-border shadow-inner" />
+        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-border shadow-inner" />
+        <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-border shadow-inner" />
+        <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-border shadow-inner" />
+
+        {/* Console Header Bar */}
+        <div className="px-5 py-3.5 border-b border-border bg-surface flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-investigation/10 border border-investigation/30 flex items-center justify-center text-investigation shadow-sm">
+              <Terminal className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-[9px] font-mono tracking-widest text-investigation uppercase font-extrabold block">
+                TERMINAL PERICIAL // CAMPO
+              </span>
+              <h3 className="text-sm font-bold text-primary font-display">
+                {getMinigameTitle(challenge.minigameId)}
+              </h3>
+            </div>
           </div>
-          <button
-            onClick={onCancel}
-            className="p-2 text-secondary hover:text-primary rounded-lg active:scale-95"
-          >
-            <XCircle className="w-6 h-6" />
-          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 font-mono text-xs text-alert bg-alert/10 px-2 py-1 rounded-lg border border-alert/20 font-bold">
+              <Clock className="w-3.5 h-3.5 animate-spin" />
+              <span>{timeLeft}s</span>
+            </div>
+
+            <button
+              onClick={onCancel}
+              className="p-1 text-secondary hover:text-primary rounded-lg active:scale-95"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Status overlay */}
-        {solved && (
-          <div className="p-4 bg-protection/20 text-protection border-b border-protection/40 flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5" />
-            <span className="font-semibold text-sm">DESAFIO CONCLUÍDO COM SUCESSO!</span>
-          </div>
-        )}
-        {errorMsg && (
-          <div className="p-3 bg-danger/20 text-danger border-b border-danger/40 flex items-center justify-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-xs font-semibold">{errorMsg}</span>
-          </div>
-        )}
+        {/* CRT Scanline Bezel Display Area */}
+        <div className="relative bg-background p-4 flex-1 overflow-y-auto min-h-[340px] flex flex-col justify-center">
+          {/* Status Overlay Banners */}
+          {solved && (
+            <div className="absolute inset-x-4 top-4 z-30 p-3.5 bg-protection/25 text-protection border border-protection/50 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold font-mono shadow-hud-cyan animate-in zoom-in-95">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>HOMOLOGADO // PERÍCIA CONCLUÍDA</span>
+            </div>
+          )}
 
-        {/* Minigame Body */}
-        <div className="p-5 flex-1 overflow-y-auto">
+          {errorMsg && (
+            <div className="absolute inset-x-4 top-4 z-30 p-3 bg-danger/25 text-danger border border-danger/50 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold font-mono shadow-hud-crimson animate-in shake">
+              <AlertTriangle className="w-4 h-4" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Minigame Components */}
           {challenge.minigameId === "circuit_reconnect" && (
             <CircuitComponent onSuccess={handleSuccess} />
           )}
@@ -139,18 +186,18 @@ export const MinigamePlayer: React.FC<MinigamePlayerProps> = ({
 
 function getMinigameTitle(id: MinigameId): string {
   switch (id) {
-    case "circuit_reconnect": return "01: Reconectar Circuitos";
-    case "cipher_breaker": return "02: Quebra de Cifra";
-    case "doc_reconstruct": return "03: Reconstruir Documento";
-    case "log_audit": return "04: Comparação de Registros";
-    case "signal_memory": return "05: Memória de Sinais";
-    case "trace_pattern": return "06: Análise de Vestígios";
-    case "chronology_order": return "07: Reconstruir Cronologia";
-    case "frequency_tune": return "08: Estabilizar Frequência";
-    case "anomaly_detect": return "09: Localizar Anomalia";
-    case "seal_auth": return "10: Autenticar Documento";
-    case "terminal_sync": return "11: Sincronizar Terminais";
-    case "packet_reassembly": return "12: Reconstruir Transmissão";
+    case "circuit_reconnect": return "MG01: Reconectar Circuitos";
+    case "cipher_breaker": return "MG02: Quebra de Cifra";
+    case "doc_reconstruct": return "MG03: Reconstruir Documento";
+    case "log_audit": return "MG04: Comparação de Registros";
+    case "signal_memory": return "MG05: Memória de Sinais";
+    case "trace_pattern": return "MG06: Análise de Vestígios";
+    case "chronology_order": return "MG07: Reconstruir Cronologia";
+    case "frequency_tune": return "MG08: Estabilizar Frequência";
+    case "anomaly_detect": return "MG09: Localizar Anomalia";
+    case "seal_auth": return "MG10: Autenticar Documento";
+    case "terminal_sync": return "MG11: Sincronizar Terminais";
+    case "packet_reassembly": return "MG12: Reconstruir Transmissão";
     default: return "Terminal Pericial";
   }
 }
@@ -174,24 +221,24 @@ const CircuitComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
 
   return (
     <div className="flex flex-col items-center">
-      <p className="text-xs text-secondary mb-4 text-center">
-        Toque nos segmentos para girá-los até formar um caminho contínuo da fonte (topo) ao destino (base).
+      <p className="text-xs text-secondary mb-3 text-center font-mono">
+        Gire os relés de cobre até conectar a entrada (topo) à saída (base):
       </p>
-      <div className="grid grid-cols-3 gap-2 w-64 h-64 bg-background p-2 rounded-xl border border-border">
+      <div className="grid grid-cols-3 gap-2.5 w-64 h-64 bg-surface p-2.5 rounded-2xl border-2 border-border shadow-inner">
         {challenge.tiles.map((tile, i) => {
           const [top, right, bottom, left] = CircuitGame.getActiveConnections(tile);
           return (
             <button
               key={tile.id}
               onClick={() => handleTileClick(i)}
-              className="relative bg-surface border border-border rounded-lg flex items-center justify-center hover:border-investigation active:scale-95 transition-transform"
+              className="relative bg-background rounded-xl border border-border/80 flex items-center justify-center hover:border-investigation active:scale-90 transition-transform shadow-md"
             >
-              {/* Circuit wire representations */}
-              {top && <div className="absolute top-0 w-1.5 h-1/2 bg-investigation" />}
-              {bottom && <div className="absolute bottom-0 w-1.5 h-1/2 bg-investigation" />}
-              {left && <div className="absolute left-0 h-1.5 w-1/2 bg-investigation" />}
-              {right && <div className="absolute right-0 h-1.5 w-1/2 bg-investigation" />}
-              <div className="w-3 h-3 rounded-full bg-investigation/80 z-10" />
+              {/* Glowing Conductive Traces */}
+              {top && <div className="absolute top-0 w-2 h-1/2 bg-investigation shadow-sm shadow-investigation" />}
+              {bottom && <div className="absolute bottom-0 w-2 h-1/2 bg-investigation shadow-sm shadow-investigation" />}
+              {left && <div className="absolute left-0 h-2 w-1/2 bg-investigation shadow-sm shadow-investigation" />}
+              {right && <div className="absolute right-0 h-2 w-1/2 bg-investigation shadow-sm shadow-investigation" />}
+              <div className="w-3.5 h-3.5 rounded-full bg-primary border-2 border-investigation z-10 shadow-hud-cyan" />
             </button>
           );
         })}
@@ -210,20 +257,26 @@ const CipherComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) => 
   const [challenge] = useState<CipherChallenge>(() => CipherGame.generate(2));
 
   return (
-    <div className="flex flex-col">
-      <p className="text-xs text-secondary mb-3">
-        Mensagem interceptada criptografada. Use a pista para selecionar a palavra correta:
+    <div className="flex flex-col space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Decifre o trecho criptografado utilizando a pista forense:
       </p>
-      <div className="bg-background p-3 rounded-xl border border-investigation/40 mb-3 text-center">
-        <span className="text-xs text-secondary block mb-1">CÓDIGO CRIPTOGRAFADO (DESL. +{challenge.shift})</span>
-        <span className="text-2xl font-mono font-bold tracking-widest text-investigation">
+
+      <div className="bg-surface p-4 rounded-2xl border border-investigation/40 text-center shadow-hud-cyan">
+        <span className="text-[10px] text-muted font-mono block mb-1">
+          CARIMBO CRIPTOGRÁFICO // DESLOCAMENTO +{challenge.shift}
+        </span>
+        <span className="text-3xl font-mono font-extrabold tracking-widest text-investigation block">
           {challenge.encryptedText}
         </span>
       </div>
-      <div className="bg-surface-elevated p-3 rounded-xl border border-border mb-4 text-xs text-secondary">
-        <strong className="text-primary block mb-0.5">Dica Forense:</strong> {challenge.clue}
+
+      <div className="p-3 bg-surface-elevated rounded-xl border border-border text-xs text-secondary leading-relaxed">
+        <strong className="text-primary font-mono block text-[10px] uppercase">Pista Pericial:</strong>
+        {challenge.clue}
       </div>
-      <div className="grid grid-cols-2 gap-2">
+
+      <div className="grid grid-cols-2 gap-2 pt-1">
         {challenge.options.map((opt) => (
           <button
             key={opt}
@@ -232,10 +285,10 @@ const CipherComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) => 
               if (CipherGame.verify(challenge, opt)) {
                 onSuccess();
               } else {
-                onFail("Chave incorreta.");
+                onFail("Chave criptográfica incorreta.");
               }
             }}
-            className="p-3 bg-surface border border-border rounded-xl font-bold font-mono text-sm hover:border-investigation active:scale-95 text-center text-primary"
+            className="p-3 bg-surface border border-border hover:border-investigation rounded-xl font-mono font-bold text-sm text-primary active:scale-95 text-center shadow-md transition-all"
           >
             {opt}
           </button>
@@ -267,9 +320,9 @@ const DocReconstructComponent: React.FC<{ onSuccess: () => void }> = ({ onSucces
   };
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Toque nos fragmentos para reordená-los na sequência correta do laudo:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Reordene os fragmentos picotados para reconstituir o laudo:
       </p>
       <div className="space-y-2">
         {order.map((fragId, idx) => {
@@ -278,11 +331,11 @@ const DocReconstructComponent: React.FC<{ onSuccess: () => void }> = ({ onSucces
             <button
               key={fragId}
               onClick={() => moveUp(idx)}
-              className="w-full text-left p-3 bg-background border border-border rounded-xl font-mono text-xs text-primary hover:border-investigation active:scale-[0.98] flex items-center justify-between"
+              className="w-full text-left p-3 bg-surface border border-border hover:border-investigation rounded-xl font-mono text-xs text-primary active:scale-[0.98] flex items-center justify-between shadow-sm transition-all"
             >
               <span>{frag.textSnippet}</span>
-              <span className="text-[10px] text-secondary ml-2 font-sans bg-surface px-1.5 py-0.5 rounded">
-                ▲ Mover
+              <span className="text-[10px] text-investigation font-mono bg-surface-elevated px-2 py-0.5 rounded border border-border shrink-0 ml-2">
+                ▲ Subir
               </span>
             </button>
           );
@@ -313,15 +366,15 @@ const LogAuditComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) =
       if (LogAuditGame.verify(updated, challenge.tamperedLineIds)) {
         onSuccess();
       } else {
-        onFail("Seleção incorreta de discrepâncias.");
+        onFail("Seleção divergente das linhas alteradas.");
       }
     }
   };
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Identifique as 2 linhas adulteradas no registro inspecionado:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Marque as 2 linhas adulteradas no registro de auditoria:
       </p>
       <div className="space-y-1.5">
         {challenge.inspectedLogs.map((log) => {
@@ -330,14 +383,14 @@ const LogAuditComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) =
             <button
               key={log.id}
               onClick={() => toggle(log.id)}
-              className={`w-full p-2.5 rounded-lg border text-left text-xs font-mono flex items-center justify-between transition-colors ${
+              className={`w-full p-2.5 rounded-xl border text-left text-xs font-mono flex items-center justify-between transition-all ${
                 isSelected
-                  ? "bg-danger/20 border-danger text-danger"
-                  : "bg-background border-border text-primary hover:border-investigation"
+                  ? "bg-danger/20 border-danger text-danger shadow-hud-crimson"
+                  : "bg-surface border-border text-primary hover:border-investigation"
               }`}
             >
               <span>[{log.time}] {log.room} — {log.user} ({log.action})</span>
-              <span className="text-[10px] opacity-75">{isSelected ? "MARCADO" : "TOCAR"}</span>
+              <span className="text-[10px] font-bold">{isSelected ? "ALVO" : "TAG"}</span>
             </button>
           );
         })}
@@ -370,7 +423,7 @@ const SignalMemoryComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
         clearInterval(interval);
         setShowingSequence(false);
       }
-    }, 600);
+    }, 650);
 
     return () => clearInterval(interval);
   }, []);
@@ -382,7 +435,7 @@ const SignalMemoryComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
     setInputSeq(updated);
 
     if (updated[updated.length - 1] !== challenge.sequence[updated.length - 1]) {
-      onFail("Sequência incorreta. Tente novamente.");
+      onFail("Sequência rompida. Tente novamente.");
       setInputSeq([]);
       return;
     }
@@ -393,11 +446,11 @@ const SignalMemoryComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <p className="text-xs text-secondary mb-4 text-center">
-        {showingSequence ? "Memorize a sequência luminosa..." : "Repita a sequência tocando nos relés:"}
+    <div className="flex flex-col items-center space-y-3">
+      <p className="text-xs text-secondary font-mono text-center">
+        {showingSequence ? "Memorize o pulso dos relés..." : "Repita a sequência luminosa exata:"}
       </p>
-      <div className="grid grid-cols-2 gap-3 w-56 h-56">
+      <div className="grid grid-cols-2 gap-3.5 w-60 h-60">
         {[0, 1, 2, 3].map((relay) => {
           const isLit = activeRelay === relay;
           return (
@@ -405,10 +458,10 @@ const SignalMemoryComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
               key={relay}
               onClick={() => handlePress(relay)}
               disabled={showingSequence}
-              className={`rounded-2xl border flex items-center justify-center font-bold text-lg font-mono transition-all ${
+              className={`rounded-2xl border-2 flex items-center justify-center font-bold text-sm font-mono transition-all duration-150 ${
                 isLit
-                  ? "bg-investigation border-investigation text-background scale-105 shadow-lg shadow-investigation/40"
-                  : "bg-surface border-border text-primary hover:border-investigation active:scale-95"
+                  ? "bg-investigation border-investigation text-background scale-105 shadow-hud-cyan"
+                  : "bg-surface border-border text-primary hover:border-investigation active:scale-90"
               }`}
             >
               RELÉ {relay + 1}
@@ -430,18 +483,19 @@ const TracePatternComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
   const [challenge] = useState<TracePatternChallenge>(() => TracePatternGame.generate());
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Compare a amostra pericial de referência com as candidatas e selecione a correspondência exata:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Selecione a amostra com o espectro idêntico à referência:
       </p>
-      {/* Reference */}
-      <div className="bg-background p-3 rounded-xl border border-investigation/40 mb-4">
-        <span className="text-[10px] text-investigation uppercase font-bold block mb-1">
+
+      {/* Reference Spectrogram */}
+      <div className="bg-surface p-3.5 rounded-2xl border border-investigation/40 shadow-hud-cyan">
+        <span className="text-[10px] text-investigation font-mono font-bold block mb-1.5 uppercase">
           {challenge.referenceSample.label}
         </span>
-        <div className="flex items-end gap-1.5 h-12 bg-surface p-2 rounded-lg">
+        <div className="flex items-end gap-2 h-14 bg-background p-2 rounded-xl">
           {challenge.referenceSample.frequencyBars.map((val, i) => (
-            <div key={i} className="flex-1 bg-investigation rounded-t" style={{ height: `${val}%` }} />
+            <div key={i} className="flex-1 bg-investigation rounded-t shadow-sm shadow-investigation" style={{ height: `${val}%` }} />
           ))}
         </div>
       </div>
@@ -456,15 +510,15 @@ const TracePatternComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
               if (TracePatternGame.verify(candidate.id, challenge.correctSampleId)) {
                 onSuccess();
               } else {
-                onFail("Amostra divergente.");
+                onFail("Divergência de frequência na amostra.");
               }
             }}
-            className="w-full p-2.5 bg-surface border border-border rounded-xl hover:border-investigation active:scale-[0.98] text-left"
+            className="w-full p-2.5 bg-surface border border-border hover:border-investigation rounded-xl text-left active:scale-[0.98] transition-all"
           >
-            <span className="text-xs font-semibold text-primary block mb-1">{candidate.label}</span>
-            <div className="flex items-end gap-1 h-8 bg-background p-1.5 rounded">
+            <span className="text-xs font-semibold text-primary block mb-1 font-display">{candidate.label}</span>
+            <div className="flex items-end gap-1.5 h-8 bg-background p-1.5 rounded-lg">
               {candidate.frequencyBars.map((v, i) => (
-                <div key={i} className="flex-1 bg-secondary/80 rounded-t" style={{ height: `${v}%` }} />
+                <div key={i} className="flex-1 bg-secondary rounded-t" style={{ height: `${v}%` }} />
               ))}
             </div>
           </button>
@@ -496,9 +550,9 @@ const ChronologyComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess })
   };
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Organize os eventos na ordem cronológica estrita:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Ordene os acontecimentos em sequência cronológica crescente:
       </p>
       <div className="space-y-2">
         {currentOrder.map((evId, idx) => {
@@ -507,13 +561,13 @@ const ChronologyComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess })
             <button
               key={evId}
               onClick={() => moveUp(idx)}
-              className="w-full p-3 bg-background border border-border rounded-xl text-left text-xs flex items-center justify-between hover:border-investigation active:scale-95"
+              className="w-full p-3 bg-surface border border-border hover:border-investigation rounded-xl text-left text-xs flex items-center justify-between active:scale-95 transition-all shadow-sm"
             >
               <div>
                 <span className="font-mono text-investigation font-bold block">{ev.timeStr}</span>
-                <span className="text-primary">{ev.description}</span>
+                <span className="text-primary font-medium">{ev.description}</span>
               </div>
-              <span className="text-[10px] text-secondary bg-surface px-2 py-1 rounded">▲ Subir</span>
+              <span className="text-[10px] font-mono text-muted bg-surface-elevated px-2 py-1 rounded">▲ Subir</span>
             </button>
           );
         })}
@@ -537,26 +591,27 @@ const FrequencyComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) 
   };
 
   return (
-    <div className="flex flex-col">
-      <p className="text-xs text-secondary mb-3">
-        Ajuste a frequência e a amplitude até calibrar com a onda de emergência:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Calibre a portadora com a onda de emergência:
       </p>
-      <div className="bg-background p-4 rounded-xl border border-investigation/40 mb-4 flex items-center justify-center">
-        {/* Animated wave simulator */}
-        <div className="w-full h-20 flex items-center justify-center overflow-hidden">
-          <svg className="w-full h-full stroke-investigation" viewBox="0 0 300 80">
-            <path
-              d={`M 0 40 Q 75 ${40 - amp * 0.4} 150 40 T 300 40`}
-              fill="none"
-              strokeWidth="2.5"
-            />
-          </svg>
-        </div>
+
+      {/* Phosphor Oscilloscope Visualizer */}
+      <div className="bg-background-dark p-4 rounded-2xl border-2 border-border shadow-inner flex items-center justify-center">
+        <svg className="w-full h-24 stroke-investigation" viewBox="0 0 300 80">
+          <path
+            d={`M 0 40 Q 75 ${40 - amp * 0.45} 150 40 T 300 40`}
+            fill="none"
+            strokeWidth="3"
+            className="filter drop-shadow-[0_0_8px_rgba(0,240,255,0.7)]"
+          />
+        </svg>
       </div>
-      <div className="space-y-4">
+
+      <div className="space-y-3.5 pt-1">
         <div>
-          <label className="text-xs text-secondary block mb-1 flex justify-between">
-            <span>FREQUÊNCIA:</span> <span className="font-mono text-investigation">{freq} Hz (Alvo: ~{challenge.targetFreq})</span>
+          <label className="text-xs text-secondary font-mono flex justify-between mb-1">
+            <span>FREQUÊNCIA:</span> <strong className="text-investigation">{freq} Hz (Alvo: ~{challenge.targetFreq})</strong>
           </label>
           <input
             type="range"
@@ -571,9 +626,10 @@ const FrequencyComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) 
             className="w-full accent-investigation"
           />
         </div>
+
         <div>
-          <label className="text-xs text-secondary block mb-1 flex justify-between">
-            <span>AMPLITUDE:</span> <span className="font-mono text-investigation">{amp} % (Alvo: ~{challenge.targetAmp})</span>
+          <label className="text-xs text-secondary font-mono flex justify-between mb-1">
+            <span>AMPLITUDE:</span> <strong className="text-investigation">{amp} % (Alvo: ~{challenge.targetAmp})</strong>
           </label>
           <input
             type="range"
@@ -620,9 +676,9 @@ const AnomalyComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) =>
   };
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Identifique os 2 setores com adulterações no esquema de segurança:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Isole os 2 setores com anomalias de sensor na planta:
       </p>
       <div className="space-y-2">
         {challenge.zones.map((zone) => {
@@ -631,14 +687,14 @@ const AnomalyComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) =>
             <button
               key={zone.id}
               onClick={() => toggle(zone.id)}
-              className={`w-full p-3 rounded-xl border text-left text-xs transition-colors flex items-center justify-between ${
+              className={`w-full p-3 rounded-xl border text-left text-xs font-mono transition-all flex items-center justify-between ${
                 isSelected
-                  ? "bg-danger/20 border-danger text-danger"
-                  : "bg-background border-border text-primary hover:border-investigation"
+                  ? "bg-danger/20 border-danger text-danger shadow-hud-crimson"
+                  : "bg-surface border-border text-primary hover:border-investigation"
               }`}
             >
               <span>{zone.name}</span>
-              <span className="text-[10px] opacity-75">{isSelected ? "SELECIONADO" : "INSPECIONAR"}</span>
+              <span className="text-[10px] font-bold">{isSelected ? "ISOLADO" : "TESTAR"}</span>
             </button>
           );
         })}
@@ -665,16 +721,16 @@ const SealAuthComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <p className="text-xs text-secondary mb-4 text-center">
-        Toque nos anéis concêntricos até que todos os glifos fiquem no topo (0°):
+    <div className="flex flex-col items-center space-y-4">
+      <p className="text-xs text-secondary font-mono text-center">
+        Toque nos anéis de segurança até alinhar todos os glifos no topo (0°):
       </p>
-      <div className="flex gap-4">
+      <div className="flex gap-4 my-2">
         {challenge.rings.map((ring, idx) => (
           <button
             key={ring.id}
             onClick={() => rotate(idx)}
-            className="w-16 h-16 rounded-full border-2 border-investigation flex items-center justify-center text-xl font-bold bg-surface active:scale-95 transition-transform"
+            className="w-16 h-16 rounded-full border-2 border-investigation flex items-center justify-center text-2xl font-bold bg-surface active:scale-90 transition-transform shadow-hud-cyan"
             style={{ transform: `rotate(${ring.rotation}deg)` }}
           >
             {ring.glyph}
@@ -695,21 +751,23 @@ const TerminalSyncComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
   const [challenge] = useState<TerminalSyncChallenge>(() => TerminalSyncGame.generate());
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Sincronize os dois nós criptográficos selecionando a soma exata dos códigos de terminal:
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Sincronize os nós criptográficos informando a soma de verificação:
       </p>
-      <div className="grid grid-cols-2 gap-2 mb-4 font-mono text-center">
-        <div className="p-3 bg-background border border-border rounded-xl">
-          <span className="text-[10px] text-secondary block">NÓ 1</span>
+
+      <div className="grid grid-cols-2 gap-2 font-mono text-center">
+        <div className="p-3 bg-surface border border-border rounded-xl">
+          <span className="text-[9px] text-muted block uppercase">TERMINAL 01</span>
           <span className="text-sm font-bold text-investigation">{challenge.terminalCodeA}</span>
         </div>
-        <div className="p-3 bg-background border border-border rounded-xl">
-          <span className="text-[10px] text-secondary block">NÓ 2</span>
+        <div className="p-3 bg-surface border border-border rounded-xl">
+          <span className="text-[9px] text-muted block uppercase">TERMINAL 02</span>
           <span className="text-sm font-bold text-investigation">{challenge.terminalCodeB}</span>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+
+      <div className="grid grid-cols-2 gap-2 pt-1">
         {challenge.options.map((opt) => (
           <button
             key={opt}
@@ -718,10 +776,10 @@ const TerminalSyncComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
               if (TerminalSyncGame.verify(opt, challenge.expectedSumCode)) {
                 onSuccess();
               } else {
-                onFail("Código de sincronização incorreto.");
+                onFail("Soma de sincronização incompatível.");
               }
             }}
-            className="p-3 bg-surface border border-border rounded-xl font-mono font-bold text-sm text-primary hover:border-investigation active:scale-95 text-center"
+            className="p-3 bg-surface border border-border hover:border-investigation rounded-xl font-mono font-bold text-sm text-primary active:scale-95 text-center shadow-md transition-all"
           >
             HASH #{opt}
           </button>
@@ -753,9 +811,9 @@ const PacketReassemblyComponent: React.FC<{ onSuccess: () => void }> = ({ onSucc
   };
 
   return (
-    <div>
-      <p className="text-xs text-secondary mb-3">
-        Reconecte os pacotes interceptados na ordem sequencial correta (SEQ: 1 a 4):
+    <div className="space-y-3">
+      <p className="text-xs text-secondary font-mono">
+        Conecte os pacotes TCP na ordem de protocolo sequencial:
       </p>
       <div className="space-y-2">
         {order.map((seqId, idx) => {
@@ -764,13 +822,13 @@ const PacketReassemblyComponent: React.FC<{ onSuccess: () => void }> = ({ onSucc
             <button
               key={seqId}
               onClick={() => moveUp(idx)}
-              className="w-full p-3 bg-background border border-border rounded-xl text-left text-xs font-mono flex items-center justify-between hover:border-investigation active:scale-95"
+              className="w-full p-3 bg-surface border border-border hover:border-investigation rounded-xl text-left text-xs font-mono flex items-center justify-between active:scale-95 transition-all shadow-sm"
             >
               <div>
                 <span className="text-investigation font-bold mr-2">[SEQ: 0{seqId}]</span>
                 <span className="text-primary">{packet.payload}</span>
               </div>
-              <span className="text-[10px] text-secondary bg-surface px-2 py-1 rounded font-sans">▲ Mover</span>
+              <span className="text-[10px] font-mono text-muted bg-surface-elevated px-2 py-1 rounded">▲ Subir</span>
             </button>
           );
         })}

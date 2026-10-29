@@ -8,6 +8,8 @@ import {
   XCircle,
   CheckCircle,
   Lock,
+  Radio,
+  Flame,
 } from "lucide-react";
 import { sound } from "../lib/audio";
 
@@ -48,19 +50,20 @@ export const KillerModal: React.FC<KillerModalProps> = ({
     }
 
     sound.playTap();
+    sound.playHeartbeat();
     onArmTrap(targetId, templateId, selectedRoom || undefined);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface border border-danger/40 rounded-2xl p-5 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="w-full max-w-md game-panel-danger p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-border">
+        <div className="flex items-center justify-between pb-3 border-b border-danger/30">
           <div className="flex items-center gap-2 text-danger">
-            <Skull className="w-5 h-5" />
+            <Skull className="w-5 h-5 animate-pulse" />
             <h3 className="text-base font-bold font-display uppercase tracking-wider text-primary">
-              Console do Assassino
+              Console Clandestino
             </h3>
           </div>
           <button onClick={onClose} className="text-secondary hover:text-primary">
@@ -68,15 +71,18 @@ export const KillerModal: React.FC<KillerModalProps> = ({
           </button>
         </div>
 
-        {/* Live Slot Status: 1/1 Trap limit */}
-        <div className="p-3 bg-surface-elevated rounded-xl border border-border flex items-center justify-between text-xs font-mono">
-          <span>ARMADILHA ATIVA:</span>
+        {/* Live Trap Slot: 1/1 Limit */}
+        <div className="p-3 bg-background/80 rounded-xl border border-danger/40 flex items-center justify-between text-xs font-mono">
+          <span className="text-secondary">SLOT DE ARMADILHA:</span>
           {hasActiveTrap ? (
-            <span className="text-danger font-bold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-danger animate-ping" /> 1/1 ARMADA
+            <span className="text-danger font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-danger animate-ping" />
+              1/1 ARMADA
             </span>
           ) : (
-            <span className="text-protection font-bold">0/1 DISPONÍVEL</span>
+            <span className="text-protection font-bold flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5" /> 0/1 LIVRE PARA ARMAR
+            </span>
           )}
         </div>
 
@@ -88,37 +94,39 @@ export const KillerModal: React.FC<KillerModalProps> = ({
         )}
 
         {hasActiveTrap ? (
-          <div className="p-4 bg-danger/10 border border-danger/30 rounded-xl space-y-2 text-xs">
-            <h4 className="font-bold text-danger uppercase">Armadilha Fatal em Andamento</h4>
-            <p className="text-secondary leading-relaxed">
-              Sua missão disfarçada foi entregue à vítima. Se ela tocar em <strong>"Iniciar missão"</strong> no ambiente exigido, será eliminada virtualmente de forma instantânea.
+          <div className="p-4 bg-background/60 border border-danger/40 rounded-xl space-y-2.5 text-xs">
+            <h4 className="font-bold text-danger uppercase font-mono flex items-center gap-1.5">
+              <Flame className="w-4 h-4" /> Armadilha Fatal em Execução
+            </h4>
+            <p className="text-secondary leading-relaxed font-sans">
+              A missão falsa foi entregue ao alvo. O visual é 100% idêntico a uma tarefa comum. Se o alvo tocar em <strong>"Iniciar missão"</strong> no cômodo exigido, morrerá no mesmo instante.
             </p>
-            <div className="pt-2 text-[10px] font-mono text-secondary">
-              ID: {kd?.activeTrap?.id}
+            <div className="pt-2 text-[10px] font-mono text-muted border-t border-border/40">
+              ID DA OPERAÇÃO: {kd?.activeTrap?.id}
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="text-xs text-secondary font-bold block mb-1">
-                SELECIONE A VÍTIMA ALVO:
+              <label className="text-xs text-secondary font-bold font-mono block mb-1">
+                SELECIONE A VÍTIMA:
               </label>
               <select
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-danger"
+                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-danger font-sans"
               >
                 <option value="">Escolha um sobrevivente vivo...</option>
                 {livingSurvivors.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.currentRoomId})
+                    {p.name} (Cômodo: {p.currentRoomId})
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="text-xs text-secondary font-bold block mb-1">
+              <label className="text-xs text-secondary font-bold font-mono block mb-1">
                 DISFARCE DA MISSÃO FALSA:
               </label>
               <div className="space-y-1.5">
@@ -127,13 +135,13 @@ export const KillerModal: React.FC<KillerModalProps> = ({
                     key={tmpl.id}
                     className={`p-2.5 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition-all ${
                       templateId === tmpl.id
-                        ? "bg-danger/10 border-danger text-primary"
-                        : "bg-background border-border text-secondary hover:border-border/80"
+                        ? "bg-danger/20 border-danger text-primary"
+                        : "bg-background border-border text-secondary hover:border-danger/40"
                     }`}
                   >
                     <div>
-                      <span className="font-bold block text-primary">{tmpl.title}</span>
-                      <span className="text-[10px] opacity-75">{tmpl.description}</span>
+                      <span className="font-bold block text-primary font-display">{tmpl.title}</span>
+                      <span className="text-[10px] text-muted">{tmpl.description}</span>
                     </div>
                     <input
                       type="radio"
@@ -149,13 +157,13 @@ export const KillerModal: React.FC<KillerModalProps> = ({
             </div>
 
             <div>
-              <label className="text-xs text-secondary font-bold block mb-1">
-                EXIGÊNCIA DE AMBIENTE (OPCIONAL):
+              <label className="text-xs text-secondary font-bold font-mono block mb-1">
+                EXIGÊNCIA DE AMBIENTE:
               </label>
               <select
                 value={selectedRoom}
                 onChange={(e) => setSelectedRoom(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none"
+                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-danger font-sans"
               >
                 <option value="">Qualquer cômodo da casa</option>
                 {publicState.rooms.map((r) => (
@@ -168,9 +176,9 @@ export const KillerModal: React.FC<KillerModalProps> = ({
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-danger text-white rounded-xl text-xs font-bold uppercase tracking-wider active:scale-95 shadow-lg shadow-danger/20"
+              className="w-full py-3.5 tactile-btn-danger text-xs font-bold font-display uppercase tracking-wider active:scale-95 transition-all shadow-xl"
             >
-              Armar Armadilha Fatal
+              Armar Armadilha Fatal (1/1)
             </button>
           </form>
         )}
