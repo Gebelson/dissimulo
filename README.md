@@ -1,8 +1,8 @@
-# ÁLIBI — Ninguém tem a história inteira
+# Dissimulo — Ninguém tem a história inteira
 
 > **Jogo completo de dedução social e investigação criminal presencial em tempo real, controlado por smartphone.**
 
-O **ÁLIBI** acontece fisicamente em uma casa real de sete cômodos. Cada jogador utiliza seu próprio smartphone, recebe informações secretas, realiza missões forenses, soluciona desafios em minigames reais, coleta evidências físicas nos ambientes e interage presencialmente com os demais para desvendar o assassino antes do tempo esgotar.
+O **Dissimulo** acontece fisicamente em uma casa real de sete cômodos. Cada jogador utiliza seu próprio smartphone, recebe informações secretas, realiza missões forenses, soluciona desafios em minigames reais, coleta evidências físicas nos ambientes e interage presencialmente com os demais para desvendar o assassino antes do tempo esgotar.
 
 ---
 

@@ -1,4 +1,4 @@
-# Relatório de Testes Automatizados — ÁLIBI
+# Relatório de Testes Automatizados — Dissimulo
 
 **Data de Execução:** 29/10/2026  
 **Ambiente:** Node.js v24.13.1 · Windows 11 · Vitest v3.2.7 · pnpm v12.8.1

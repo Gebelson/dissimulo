@@ -16,7 +16,7 @@ import {
 } from "@alibi/minigames";
 import { ManualRoomProvider } from "@alibi/location";
 
-describe("ÁLIBI — Invariantes Críticas de Regras e Armadilhas", () => {
+describe("Dissimulo — Invariantes Críticas de Regras e Armadilhas", () => {
   let room: GameState;
   let killerId: string;
   let survivorIds: string[];
@@ -145,7 +145,7 @@ describe("ÁLIBI — Invariantes Críticas de Regras e Armadilhas", () => {
   });
 });
 
-describe("ÁLIBI — Validação dos 12 Minigames", () => {
+describe("Dissimulo — Validação dos 12 Minigames", () => {
   it("MG01: Reconectar Circuitos — resolve quando conexões alinham fonte e sumidouro", () => {
     const challenge = CircuitGame.generate(3);
     expect(challenge.tiles.length).toBe(9);

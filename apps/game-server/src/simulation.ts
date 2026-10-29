@@ -2,7 +2,7 @@ import { GameState } from "@alibi/game-engine";
 import { SolvabilityVerifier } from "@alibi/game-engine";
 
 export async function runFullEightPlayerSimulation(): Promise<boolean> {
-  console.log("=== INICIANDO SIMULAÇÃO COMPLETA DE 8 JOGADORES DO ÁLIBI ===");
+  console.log("=== INICIANDO SIMULAÇÃO COMPLETA DE 8 JOGADORES DO DISSIMULO ===");
 
   const room = new GameState("sim_match_001", "CASA8");
 

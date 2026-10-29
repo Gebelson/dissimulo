@@ -1,6 +1,6 @@
-# Licenças de Assets e Recursos Audiovisuais — ÁLIBI
+# Licenças de Assets e Recursos Audiovisuais — Dissimulo
 
-O ÁLIBI foi concebido com rigor de conformidade legal, sem utilizar assets proprietários de jogos comerciais (como *Among Us*), sem imagens de filmes e sem dependências pagas desnecessárias.
+O Dissimulo foi concebido com rigor de conformidade legal, sem utilizar assets proprietários de jogos comerciais (como *Among Us*), sem imagens de filmes e sem dependências pagas desnecessárias.
 
 ---
 

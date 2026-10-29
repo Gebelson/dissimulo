@@ -1,8 +1,8 @@
-# Arquitetura Técnica do ÁLIBI
+# Arquitetura Técnica do Dissimulo
 
 ## 1. Princípios de Arquitetura
 
-O **ÁLIBI** segue o padrão de **servidor autoritativo estrito**. O cliente smartphone é uma interface de apresentação e coleta de comandos; nenhuma decisão crítica de jogo (eliminação, neutralização, distribuição de papéis, descoberta de pistas ou resultado de votação) é aceita pelo servidor sem validação prévia.
+O **Dissimulo** segue o padrão de **servidor autoritativo estrito**. O cliente smartphone é uma interface de apresentação e coleta de comandos; nenhuma decisão crítica de jogo (eliminação, neutralização, distribuição de papéis, descoberta de pistas ou resultado de votação) é aceita pelo servidor sem validação prévia.
 
 ### Invariante Anti-Cheat
 O servidor **nunca** envia no payload público ou nas mensagens privadas de sobreviventes campos como:

@@ -1,6 +1,6 @@
 {
   "appId": "com.alibi.game",
-  "appName": "ÁLIBI",
+  "appName": "Dissimulo",
   "webDir": "../web/dist",
   "bundledWebRuntime": false,
   "server": {

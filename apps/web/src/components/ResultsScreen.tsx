@@ -1,6 +1,6 @@
 import React from "react";
 import { PublicGameState, PlayerPrivateView } from "@alibi/contracts";
-import { AlibiLogo } from "./ui/AlibiLogo";
+import { DissimuloLogo } from "./ui/DissimuloLogo";
 import {
   Trophy,
   Skull,
@@ -30,7 +30,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
       <div className="space-y-5 pt-4 text-center">
-        <AlibiLogo size="md" />
+        <DissimuloLogo size="md" />
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-elevated border border-border text-xs text-investigation font-mono">
           <Trophy className="w-4 h-4 text-investigation" /> RECONSTITUIÇÃO FINAL DOS FATOS

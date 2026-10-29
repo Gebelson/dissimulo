@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PublicGameState, PlayerPrivateView } from "@alibi/contracts";
-import { AlibiLogo } from "./ui/AlibiLogo";
+import { DissimuloLogo } from "./ui/DissimuloLogo";
 import {
   Users,
   Play,
@@ -51,7 +51,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
     <div className="min-h-screen bg-background p-4 flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
       {/* Brand Header */}
       <div className="space-y-4 pt-4 text-center">
-        <AlibiLogo size="lg" />
+        <DissimuloLogo size="lg" />
 
         {/* Room Code Card */}
         <div className="game-panel p-4 flex items-center justify-between mt-4">

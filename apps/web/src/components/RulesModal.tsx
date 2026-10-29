@@ -15,7 +15,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
           <div className="flex items-center gap-2 text-investigation">
             <BookOpen className="w-5 h-5" />
             <h3 className="text-base font-bold font-display uppercase tracking-wider text-primary">
-              Manual do Jogo ÁLIBI
+              Manual do Jogo Dissimulo
             </h3>
           </div>
           <button onClick={onClose} className="text-secondary hover:text-primary">
@@ -27,7 +27,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
         <div className="space-y-3.5 text-xs text-secondary leading-relaxed">
           <div className="p-3 bg-surface-elevated rounded-xl border border-border">
             <strong className="text-primary block mb-1">01. O Conceito</strong>
-            Vocês estão em uma casa real com 7 ambientes. Um dos participantes foi secretamente sorteado como o <strong>Assassino</strong>. Os demais são sobreviventes com diferentes funções investigativas.
+            Vocês estão em uma casa real com 7 ambientes. No <strong>Dissimulo</strong>, um dos participantes foi secretamente sorteado como o <strong>Assassino</strong>. Os demais são sobreviventes com diferentes funções investigativas.
           </div>
 
           <div className="p-3 bg-surface-elevated rounded-xl border border-border">

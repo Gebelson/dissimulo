@@ -1,8 +1,8 @@
-# Guia de Hospedagem e Deploy — ÁLIBI
+# Guia de Hospedagem e Deploy — Dissimulo
 
 ## 1. Conexões Persistentes (Requisito Crítico)
 
-> **IMPORTANTE:** O ÁLIBI utiliza conexões persistentes WebSocket com estado em tempo real. **Não hospede o servidor multiplayer em funções serverless de borda efêmeras** (como Vercel Serverless Functions ou AWS Lambda padrão), pois elas encerram conexões persistentes após alguns segundos.
+> **IMPORTANTE:** O Dissimulo utiliza conexões persistentes WebSocket com estado em tempo real. **Não hospede o servidor multiplayer em funções serverless de borda efêmeras** (como Vercel Serverless Functions ou AWS Lambda padrão), pois elas encerram conexões persistentes após alguns segundos.
 
 O servidor `apps/game-server` deve rodar como um processo contínuo em:
 - Um container Docker (em Railway, Render, Fly.io, VPS Linux ou AWS ECS/EC2)

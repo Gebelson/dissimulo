@@ -6,6 +6,11 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
+      "@dissimulo/contracts": ["../../packages/contracts/src/index.ts"],
+      "@dissimulo/game-engine": ["../../packages/game-engine/src/index.ts"],
+      "@dissimulo/minigames": ["../../packages/minigames/src/index.ts"],
+      "@dissimulo/location": ["../../packages/location/src/index.ts"],
+      "@dissimulo/evidence-engine": ["../../packages/evidence-engine/src/index.ts"],
       "@alibi/contracts": ["../../packages/contracts/src/index.ts"],
       "@alibi/game-engine": ["../../packages/game-engine/src/index.ts"],
       "@alibi/minigames": ["../../packages/minigames/src/index.ts"],

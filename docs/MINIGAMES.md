@@ -1,6 +1,6 @@
-# Catálogo dos 12 Minigames — ÁLIBI
+# Catálogo dos 12 Minigames — Dissimulo
 
-Cada minigame do ÁLIBI possui regras próprias, controles otimizados para toque em telas de smartphone (360 a 430 px) e validação matemática de resultado no servidor.
+Cada minigame do Dissimulo possui regras próprias, controles otimizados para toque em telas de smartphone (360 a 430 px) e validação matemática de resultado no servidor.
 
 ---
 

@@ -1,4 +1,4 @@
-# Regras Completas do Jogo — ÁLIBI
+# Regras Completas do Jogo — Dissimulo
 
 ## 1. Visão Geral
 - **Gênero:** Dedução social, investigação criminal presencial e sobrevivência.

@@ -1,4 +1,4 @@
-# Balanceamento de Partida e Conteúdo — ÁLIBI
+# Balanceamento de Partida e Conteúdo — Dissimulo
 
 ## 1. Tabela de Dimensionamento (4 a 20 Jogadores)
 

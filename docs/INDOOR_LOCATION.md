@@ -1,6 +1,6 @@
 # Localização Indoor — iBeacons e Modo Manual
 
-O ÁLIBI suporta três modos intercambiáveis de localização através da abstração `LocationProvider`.
+O Dissimulo suporta três modos intercambiáveis de localização através da abstração `LocationProvider`.
 
 ---
 

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>pt_BR</string>
 	<key>CFBundleDisplayName</key>
-	<string>ÁLIBI</string>
+	<string>Dissimulo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>O ÁLIBI utiliza Bluetooth Low Energy para identificar em qual cômodo da casa você está durante a investigação.</string>
+	<string>O Dissimulo utiliza Bluetooth Low Energy para identificar em qual cômodo da casa você está durante a investigação.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Necessário para monitoramento de transmissores de ambiente.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

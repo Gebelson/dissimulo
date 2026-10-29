@@ -5,7 +5,7 @@ import { ClientAction } from "@alibi/contracts";
 
 const PORT = Number(process.env.PORT) || 4000;
 
-export class AlibiServer {
+export class DissimuloServer {
   private server: http.Server;
   private wss: WebSocketServer;
   private rooms: Map<string, GameState> = new Map();
@@ -258,7 +258,7 @@ export class AlibiServer {
   public listen(port = PORT): Promise<void> {
     return new Promise((resolve) => {
       this.server.listen(port, () => {
-        console.log(`[ALIBI SERVER] Listening on http://localhost:${port}`);
+        console.log(`[DISSIMULO SERVER] Listening on http://localhost:${port}`);
         resolve();
       });
     });
@@ -274,8 +274,11 @@ export class AlibiServer {
   }
 }
 
+// Backwards compatibility alias
+export { DissimuloServer as AlibiServer };
+
 // Start standalone if executed directly
 if (process.argv[1]?.endsWith("server.ts") || process.argv[1]?.endsWith("server.js")) {
-  const s = new AlibiServer();
+  const s = new DissimuloServer();
   s.listen();
 }

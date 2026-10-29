@@ -6,7 +6,7 @@ import {
   MinigameChallengeData,
 } from "@alibi/contracts";
 import { sound } from "./lib/audio";
-import { AlibiLogo } from "./components/ui/AlibiLogo";
+import { DissimuloLogo } from "./components/ui/DissimuloLogo";
 import { RoleRevealModal } from "./components/ui/RoleRevealModal";
 import { OnboardingOverlay } from "./components/ui/OnboardingOverlay";
 import { HomeTab } from "./components/HomeTab";
@@ -38,13 +38,13 @@ export function App() {
     return new URLSearchParams(window.location.search).get("room") || "CASA8";
   });
   const [playerName, setPlayerName] = useState(() => {
-    return localStorage.getItem("alibi_name") || "Investigador";
+    return localStorage.getItem("dissimulo_name") || localStorage.getItem("alibi_name") || "Investigador";
   });
   const [playerId] = useState(() => {
-    let id = sessionStorage.getItem("alibi_player_id");
+    let id = sessionStorage.getItem("dissimulo_player_id") || sessionStorage.getItem("alibi_player_id");
     if (!id) {
       id = `p_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      sessionStorage.setItem("alibi_player_id", id);
+      sessionStorage.setItem("dissimulo_player_id", id);
     }
     return id;
   });
@@ -137,14 +137,14 @@ export function App() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 select-none">
         <div className="w-full max-w-sm game-panel p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
-          <AlibiLogo size="lg" />
+          <DissimuloLogo size="lg" />
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (!playerName.trim() || !roomCode.trim()) return;
               sound.playTap();
-              localStorage.setItem("alibi_name", playerName);
+              localStorage.setItem("dissimulo_name", playerName);
               setJoined(true);
             }}
             className="space-y-4 pt-2"
@@ -193,7 +193,7 @@ export function App() {
   if (!publicState || !privateState) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center space-y-4 select-none">
-        <AlibiLogo size="sm" subtitle={false} />
+        <DissimuloLogo size="sm" subtitle={false} />
         <div className="w-10 h-10 border-2 border-investigation border-t-transparent rounded-full animate-spin shadow-hud-cyan" />
         <span className="text-xs font-mono text-secondary tracking-widest">
           ESTABELECENDO CANAL SEGURO...
@@ -237,7 +237,7 @@ export function App() {
       {/* TOP DIEGETIC HUD BAR */}
       <header className="px-4 py-2.5 border-b border-border bg-surface/95 backdrop-blur-md flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <AlibiLogo size="sm" subtitle={false} />
+          <DissimuloLogo size="sm" subtitle={false} />
           <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-2 py-0.5 rounded border border-investigation/30 font-bold">
             {roomCode}
           </span>

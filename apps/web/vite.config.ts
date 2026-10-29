@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      "@dissimulo/contracts": path.resolve(__dirname, "../../packages/contracts/src/index.ts"),
+      "@dissimulo/game-engine": path.resolve(__dirname, "../../packages/game-engine/src/index.ts"),
+      "@dissimulo/minigames": path.resolve(__dirname, "../../packages/minigames/src/index.ts"),
+      "@dissimulo/location": path.resolve(__dirname, "../../packages/location/src/index.ts"),
+      "@dissimulo/evidence-engine": path.resolve(__dirname, "../../packages/evidence-engine/src/index.ts"),
       "@alibi/contracts": path.resolve(__dirname, "../../packages/contracts/src/index.ts"),
       "@alibi/game-engine": path.resolve(__dirname, "../../packages/game-engine/src/index.ts"),
       "@alibi/minigames": path.resolve(__dirname, "../../packages/minigames/src/index.ts"),

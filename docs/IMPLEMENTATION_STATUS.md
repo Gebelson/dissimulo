@@ -1,4 +1,4 @@
-# Matriz de Status de Implementação — ÁLIBI
+# Matriz de Status de Implementação — Dissimulo
 
 Legenda:
 - **DONE:** Implementado com código definitivo completo (sem mock, sem botões decorativos).
