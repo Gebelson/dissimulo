@@ -20,8 +20,11 @@ import {
   BadgeCheck,
   Search,
   CheckCircle2,
+  Pin,
+  X,
 } from "lucide-react";
 import { sound } from "../lib/audio";
+import { CharacterPortrait, ConfidentialStamp, EvidenceStamp, NoirSectionHeader } from "./ui/NoirComponents";
 
 interface DossierTabProps {
   publicState: PublicGameState;
@@ -44,11 +47,12 @@ export const DossierTab: React.FC<DossierTabProps> = ({
   const [newHypothesis, setNewHypothesis] = useState("");
   const [selectedEvId, setSelectedEvId] = useState("");
   const [selectedSuspectId, setSelectedSuspectId] = useState("");
+  const [inspectEvidence, setInspectEvidence] = useState<Evidence | null>(null);
 
   const handleTestimonySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStatement.trim()) return;
-    sound.playTap();
+    sound.playTypewriterClick();
     onSubmitTestimony(newStatement.trim(), testimonyRoom);
     setNewStatement("");
   };
@@ -62,9 +66,15 @@ export const DossierTab: React.FC<DossierTabProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-24 animate-in fade-in duration-300">
-      {/* DOSSIER SUB-NAVIGATION CHIPS */}
-      <div className="flex bg-surface-elevated/90 p-1 rounded-xl border border-border shadow-inner">
+    <div className="space-y-4 pb-28 animate-fade-in-dramatic">
+      <NoirSectionHeader
+        title="Dossiê do Caso"
+        subtitle="Mesa pericial, arquivo de provas e depoimentos"
+        badge="PROCESSO Nº 08-MANOR"
+      />
+
+      {/* SUB-NAVIGATION TABS */}
+      <div className="flex bg-[#171411] p-1 rounded-xl border border-[#4A3A32] shadow-inner">
         {(["EVIDENCE", "SUSPECTS", "TIMELINE", "GRAPH"] as const).map((tab) => (
           <button
             key={tab}
@@ -74,305 +84,356 @@ export const DossierTab: React.FC<DossierTabProps> = ({
             }}
             className={`flex-1 py-2 text-xs font-mono font-bold rounded-lg transition-all ${
               subTab === tab
-                ? "bg-investigation text-background shadow-md shadow-investigation/20"
-                : "text-secondary hover:text-primary"
+                ? "bg-[#2A231C] text-[#F2EDE4] border border-[#B79A70]/60 shadow-sm"
+                : "text-[#C2B7AA] hover:text-[#F2EDE4]"
             }`}
           >
             {tab === "EVIDENCE"
-              ? "Provas"
+              ? "Evidências"
               : tab === "SUSPECTS"
               ? "Suspeitos"
               : tab === "TIMELINE"
-              ? "Depoimentos"
+              ? "Álibis"
               : "Mural"}
           </button>
         ))}
       </div>
 
-      {/* SUBTAB: PROVAS FORENSES */}
+      {/* SUBTAB 1: EVIDÊNCIAS COLETADAS */}
       {subTab === "EVIDENCE" && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-secondary px-1 font-mono">
-            <span>PROVAS EM MÃOS ({privateState.privateEvidence.length})</span>
-            <span className="text-investigation font-bold">AUTENTICAÇÃO PERICIAL</span>
+          <div className="flex items-center justify-between text-xs text-[#C2B7AA] px-1 font-mono">
+            <span>PEÇAS REGISTRADAS ({privateState.privateEvidence.length})</span>
+            <span className="text-[#B79A70] font-semibold">LAUDOS FORENSES</span>
           </div>
 
           {privateState.privateEvidence.length === 0 ? (
-            <div className="p-10 text-center game-panel text-secondary text-xs space-y-2">
-              <FolderLock className="w-8 h-8 text-muted mx-auto opacity-50" />
-              <p className="font-bold text-primary">Nenhuma evidência recuperada ainda.</p>
-              <p className="text-muted text-[11px] leading-relaxed">
-                Vá até a aba <strong>Explorar</strong>, selecione um cômodo e toque em <strong>"Investigar Este Ambiente"</strong>.
+            <div className="p-8 text-center noir-card text-[#C2B7AA] text-xs space-y-2 border-dashed">
+              <FolderLock className="w-8 h-8 text-[#B79A70] mx-auto opacity-40" />
+              <p className="font-serif font-bold text-[#F2EDE4] text-sm">
+                Nenhuma evidência recolhida até o momento.
+              </p>
+              <p className="text-[11px]">
+                Desloque-se aos cômodos da residência na aba <strong>Explorar</strong> e investigue vestígios para recuperar laudos periciais reais.
               </p>
             </div>
           ) : (
-            privateState.privateEvidence.map((ev) => (
-              <div
-                key={ev.id}
-                className="game-panel p-4 space-y-2.5 border-border hover:border-investigation/60 transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[9px] font-mono px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
-                      ev.tier === "CORE"
-                        ? "bg-investigation/20 text-investigation border border-investigation/40"
-                        : ev.tier === "DISTRACTOR"
-                        ? "bg-alert/20 text-alert border border-alert/40"
-                        : "bg-surface-elevated text-secondary border border-border"
-                    }`}
-                  >
-                    TIER: {ev.tier === "CORE" ? "NÚCLEO FORENSE" : ev.tier}
-                  </span>
-
-                  {ev.isSharedWithGroup ? (
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-protection bg-protection/10 px-2 py-0.5 rounded border border-protection/30 font-bold">
-                      <CheckCircle2 className="w-3 h-3" /> PÚBLICA NO DOSSIÊ
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {privateState.privateEvidence.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="noir-card p-4 space-y-2.5 hover:border-[#B79A70]/70 transition-all cursor-pointer relative"
+                  onClick={() => {
+                    sound.playPaperRustle();
+                    setInspectEvidence(ev);
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <span className="stamp-evidence text-[9px]">{ev.id.substring(0, 6)}</span>
+                    <span className="text-[10px] font-mono text-[#B79A70] uppercase">
+                      {ev.roomId}
                     </span>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        sound.playTap();
-                        onShareEvidence(ev.id);
-                      }}
-                      className="text-[10px] font-mono text-investigation hover:text-white flex items-center gap-1 bg-surface-elevated hover:bg-investigation/20 px-2 py-1 rounded-lg border border-border hover:border-investigation active:scale-95 transition-all"
-                    >
-                      <Share2 className="w-3 h-3" /> Revelar ao Grupo
-                    </button>
-                  )}
-                </div>
+                  </div>
 
-                <div>
-                  <h4 className="text-sm font-bold text-primary font-display">{ev.title}</h4>
-                  <p className="text-xs text-secondary mt-1 leading-relaxed">{ev.detailedFindings}</p>
-                </div>
+                  <h3 className="font-serif font-bold text-sm text-[#F2EDE4] leading-snug">
+                    {ev.title}
+                  </h3>
 
-                <div className="pt-2 border-t border-border flex items-center justify-between text-[10px] text-muted font-mono">
-                  <span>CÔMODO: {ev.roomId.toUpperCase()}</span>
-                  <span className={ev.authenticityVerified ? "text-protection" : "text-alert"}>
-                    {ev.authenticityVerified ? "✓ Assinatura Digital Válida" : "⚠ Origem Não Autenticada"}
-                  </span>
+                  <p className="text-xs text-[#C2B7AA] line-clamp-2 leading-relaxed">
+                    {ev.shortDescription}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#4A3A32]/40 text-[10px] font-mono text-[#C2B7AA]">
+                    <span>FONTE: PERÍCIA REAL</span>
+                    <span className="text-[#B79A70] hover:underline font-serif">Examinar &rarr;</span>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       )}
 
-      {/* SUBTAB: SUSPEITOS */}
+      {/* SUBTAB 2: SUSPEITOS & RETRATOS */}
       {subTab === "SUSPECTS" && (
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-xs text-secondary px-1 font-mono">
-            <span>SUSPEITOS NA CASA ({publicState.players.length})</span>
-            <span className="text-investigation font-bold">ESTADO DE PRESENÇA</span>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs text-[#C2B7AA] px-1 font-mono">
+            <span>TODOS OS PARTICIPANTES ({publicState.players.length})</span>
+            <span className="text-[#B79A70]">ESTADO OFICIAL</span>
           </div>
 
-          {publicState.players.map((suspect) => {
-            const isDead = suspect.status !== "ALIVE";
-            const isMe = suspect.id === privateState.playerId;
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {publicState.players.map((p) => {
+              const isMe = p.id === privateState.playerId;
+              return (
+                <div
+                  key={p.id}
+                  className={`noir-card p-3 flex flex-col items-center text-center space-y-2 ${
+                    isMe ? "border-[#B79A70]/80 bg-[#221D19]" : ""
+                  }`}
+                >
+                  <CharacterPortrait name={p.name} status={p.status} size="lg" />
 
-            return (
-              <div
-                key={suspect.id}
-                className={`game-panel p-3.5 flex items-center justify-between transition-all ${
-                  isDead ? "opacity-50 border-danger/40" : isMe ? "border-investigation/60" : ""
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-mono font-bold text-sm border ${
-                      isDead
-                        ? "bg-danger/20 border-danger text-danger"
-                        : "bg-surface-elevated border-border text-primary"
-                    }`}
-                  >
-                    {isDead ? "💀" : suspect.name.charAt(0)}
-                  </div>
                   <div>
-                    <h4 className="text-sm font-bold text-primary font-display flex items-center gap-1.5">
-                      <span>{suspect.name}</span>
-                      {isMe && <span className="text-[10px] text-investigation font-mono">(Você)</span>}
-                      {suspect.isHost && (
-                        <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-1 py-0.2 rounded border border-investigation/30">
-                          HOST
-                        </span>
-                      )}
-                    </h4>
-                    <span className="text-xs text-secondary font-mono">
-                      Cômodo Atual: <strong className="capitalize">{suspect.currentRoomId.replace("_", " ")}</strong>
+                    <span className="text-xs font-serif font-bold text-[#F2EDE4] block truncate max-w-[120px]">
+                      {p.name} {isMe && "(Você)"}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#B79A70]">
+                      {p.currentRoomId || "Local não declarado"}
+                    </span>
+                  </div>
+
+                  <div className="w-full pt-1 border-t border-[#4A3A32]/40 flex justify-center">
+                    <span
+                      className={`text-[9px] font-mono px-2 py-0.5 rounded uppercase font-bold ${
+                        p.status === "ALIVE"
+                          ? "bg-[#73917B]/20 text-[#73917B]"
+                          : p.status === "ECO"
+                          ? "bg-[#7B849D]/20 text-[#7B849D]"
+                          : "bg-[#9F3D3D]/20 text-[#F1A8A4]"
+                      }`}
+                    >
+                      {p.status === "ALIVE" ? "VIVO" : p.status === "ECO" ? "ECO" : "FALECIDO"}
                     </span>
                   </div>
                 </div>
-
-                <span
-                  className={`text-[10px] font-mono px-2.5 py-1 rounded-lg font-bold ${
-                    suspect.status === "ALIVE"
-                      ? "text-protection bg-protection/10 border border-protection/30"
-                      : "text-danger bg-danger/10 border border-danger/30"
-                  }`}
-                >
-                  {suspect.status === "ALIVE" ? "VIVO" : "ELIMINADO"}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* SUBTAB: DEPOIMENTOS E ÁLIBIS */}
+      {/* SUBTAB 3: DEPOIMENTOS E DECLARAÇÃO DE ÁLIBI */}
       {subTab === "TIMELINE" && (
         <div className="space-y-4">
-          <form onSubmit={handleTestimonySubmit} className="game-panel p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold font-mono text-primary uppercase">
+          {/* Formulário de Registro de Álibi */}
+          <form onSubmit={handleTestimonySubmit} className="noir-card p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#4A3A32]/60 pb-1.5">
+              <span className="text-xs font-serif font-bold text-[#F2EDE4]">
                 Registrar Declaração de Álibi
-              </h4>
-              <span className="text-[10px] font-mono text-muted">GRAVAÇÃO NO DOSSIÊ</span>
+              </span>
+              <span className="text-[10px] font-mono text-[#B79A70]">TESTEMUNHO OFICIAL</span>
             </div>
 
             <textarea
               value={newStatement}
               onChange={(e) => setNewStatement(e.target.value)}
-              placeholder="Descreva o que presenciou, com quem estava ou onde permaneceu..."
-              className="w-full bg-background border border-border rounded-xl p-3 text-xs text-primary focus:border-investigation outline-none resize-none h-20 font-sans"
+              placeholder="Ex: Eu estava na Cozinha às 20h15 preparando café com a Daniela..."
+              rows={2}
+              className="w-full bg-[#0C0B0A] border border-[#4A3A32] rounded-xl p-2.5 text-xs text-[#F2EDE4] placeholder-[#C2B7AA]/40 outline-none focus:border-[#B79A70] font-sans"
+              required
             />
 
-            <div className="flex gap-2">
-              <select
-                value={testimonyRoom}
-                onChange={(e) => setTestimonyRoom(e.target.value)}
-                className="bg-surface-elevated border border-border rounded-xl px-2.5 py-2 text-xs text-secondary font-mono outline-none"
-              >
-                {publicState.rooms.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-mono text-[#C2B7AA]">
+                Cômodo declarado: <strong>{testimonyRoom}</strong>
+              </span>
 
               <button
                 type="submit"
-                className="flex-1 py-2 tactile-btn-primary rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                className="py-2 px-4 noir-btn-primary rounded-lg text-xs font-serif font-bold flex items-center gap-1.5 uppercase tracking-wider"
               >
-                <Send className="w-3.5 h-3.5" /> Publicar Depoimento
+                <Send className="w-3 h-3" />
+                <span>Protocolar</span>
               </button>
             </div>
           </form>
 
-          {/* Testimonies Archive */}
+          {/* Lista de Depoimentos */}
           <div className="space-y-2">
-            <span className="text-xs font-mono text-secondary px-1 block">
-              REGISTRO DE DEPOIMENTOS ({privateState.testimonies.length})
+            <span className="text-[10px] font-mono text-[#C2B7AA] uppercase tracking-wider block px-1">
+              DEPOIMENTOS DOS SOBREVIVENTES ({privateState.testimonies.length})
             </span>
 
             {privateState.testimonies.length === 0 ? (
-              <div className="p-6 text-center game-panel text-secondary text-xs">
-                Nenhum depoimento formalizado. Use o formulário acima para registrar sua versão dos fatos.
+              <div className="p-6 text-center noir-card text-xs text-[#C2B7AA]">
+                Nenhum álibi foi registrado pelos investigadores ainda.
               </div>
             ) : (
-              privateState.testimonies.map((t) => (
-                <div key={t.id} className="game-panel p-3.5 space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-secondary">
-                    <span className="text-investigation font-bold">DEPOIMENTO #{t.id.slice(-4)}</span>
-                    <span className="capitalize text-muted">{t.claimedRoomId.replace("_", " ")}</span>
+              privateState.testimonies.map((testimony) => {
+                const author = publicState.players.find((p) => p.id === testimony.authorPlayerId);
+                return (
+                  <div key={testimony.id} className="noir-card p-3 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-xs font-serif text-[#B79A70]">
+                        {author?.name || "Investigador Desconhecido"}
+                      </strong>
+                      <span className="text-[10px] font-mono text-[#C2B7AA]">
+                        {new Date(testimony.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-[#F2EDE4] italic font-serif leading-relaxed">
+                      "{testimony.statement}"
+                    </p>
+
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#C2B7AA] pt-1 border-t border-[#4A3A32]/30">
+                      <span>Ambiente afirmado: {testimony.claimedRoomId}</span>
+                      <span className="text-[#73917B]">DECLARAÇÃO REGISTRADA</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-primary leading-relaxed font-sans">{t.statement}</p>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
       )}
 
-      {/* SUBTAB: MURAL INVESTIGATIVO DE CONEXÕES */}
+      {/* SUBTAB 4: MURAL DO CRIME (CORKBOARD WITH RED THREADS) */}
       {subTab === "GRAPH" && (
         <div className="space-y-4">
-          <div className="p-3 bg-surface-elevated border border-border rounded-xl text-xs text-secondary leading-relaxed">
-            Conecte pistas a suspeitos com uma hipótese explicativa para embasar sua acusação na reunião.
+          <div className="noir-card p-4 space-y-3 bg-[#14110E] border-[#4A3A32]">
+            <div className="flex items-center justify-between border-b border-[#4A3A32]/60 pb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Pin className="w-4 h-4 text-[#9F3D3D]" />
+                <span className="text-xs font-serif font-bold text-[#F2EDE4]">
+                  Fixar Linha de Conexão no Mural
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-[#B79A70]">HIPÓTESE</span>
+            </div>
+
+            <form onSubmit={handleCreateConnection} className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[9px] font-mono text-[#C2B7AA] uppercase block mb-1">
+                    PEÇA / PROVA:
+                  </label>
+                  <select
+                    value={selectedEvId}
+                    onChange={(e) => setSelectedEvId(e.target.value)}
+                    className="w-full bg-[#0C0B0A] border border-[#4A3A32] rounded-lg p-2 text-xs text-[#F2EDE4] outline-none"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {privateState.privateEvidence.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-mono text-[#C2B7AA] uppercase block mb-1">
+                    SUSPEITO ALVO:
+                  </label>
+                  <select
+                    value={selectedSuspectId}
+                    onChange={(e) => setSelectedSuspectId(e.target.value)}
+                    className="w-full bg-[#0C0B0A] border border-[#4A3A32] rounded-lg p-2 text-xs text-[#F2EDE4] outline-none"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {publicState.players.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={newHypothesis}
+                  onChange={(e) => setNewHypothesis(e.target.value)}
+                  placeholder="Por que este fato incrimina ou contradiz o suspeito?"
+                  className="w-full bg-[#0C0B0A] border border-[#4A3A32] rounded-lg p-2.5 text-xs text-[#F2EDE4] outline-none"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 noir-btn-secondary rounded-lg text-xs font-serif font-bold text-[#F2EDE4] uppercase tracking-wider flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#B79A70]" />
+                <span>Fixar Conexão com Fio Vermelho</span>
+              </button>
+            </form>
           </div>
 
-          {/* Connection Builder */}
-          <form onSubmit={handleCreateConnection} className="game-panel p-4 space-y-3">
-            <h4 className="text-xs font-bold font-mono text-primary uppercase">
-              Traçar Relação Investigativa
-            </h4>
-
-            <div>
-              <label className="text-[10px] font-mono text-muted uppercase block mb-1">
-                EVIDÊNCIA IDENTIFICADA:
-              </label>
-              <select
-                value={selectedEvId}
-                onChange={(e) => setSelectedEvId(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-investigation"
-              >
-                <option value="">Selecione uma prova do dossiê...</option>
-                {privateState.privateEvidence.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-mono text-muted uppercase block mb-1">
-                SUSPEITO VINCULADO:
-              </label>
-              <select
-                value={selectedSuspectId}
-                onChange={(e) => setSelectedSuspectId(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-investigation"
-              >
-                <option value="">Selecione o suspeito...</option>
-                {publicState.players.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.currentRoomId})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-mono text-muted uppercase block mb-1">
-                HIPÓTESE EXPLICATIVA:
-              </label>
-              <input
-                type="text"
-                value={newHypothesis}
-                onChange={(e) => setNewHypothesis(e.target.value)}
-                placeholder="Ex: Teve acesso à chave durante o blefe na varanda"
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-investigation"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-2.5 tactile-btn-primary rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" /> Fixar Fio de Investigação no Mural
-            </button>
-          </form>
-
-          {/* Connections List */}
+          {/* Lista de Fios / Conexões */}
           <div className="space-y-2">
-            <span className="text-xs font-mono text-secondary px-1 block">
-              FIOS NO MURAL ({privateState.connections.length})
+            <span className="text-[10px] font-mono text-[#C2B7AA] uppercase tracking-wider block px-1">
+              CONEXÕES FIXADAS ({privateState.connections.length})
             </span>
 
             {privateState.connections.length === 0 ? (
-              <div className="p-6 text-center game-panel text-secondary text-xs">
-                Nenhuma conexão traçada. Use o formulário para associar fatos a suspeitos.
+              <div className="p-6 text-center noir-card text-xs text-[#C2B7AA]">
+                Nenhuma linha de dedução traçada no mural ainda.
               </div>
             ) : (
-              privateState.connections.map((c) => (
-                <div key={c.id} className="game-panel p-3.5 space-y-1.5 text-xs">
-                  <div className="flex items-center gap-2 text-investigation font-mono text-[10px] font-bold">
-                    <span>{c.fromEvidenceId}</span> ➔ <span>{c.toEvidenceOrSuspectId}</span>
+              privateState.connections.map((conn) => {
+                const target = publicState.players.find((p) => p.id === conn.toEvidenceOrSuspectId);
+                return (
+                  <div key={conn.id} className="noir-card p-3 space-y-2 border-l-4 border-l-[#9F3D3D]">
+                    <div className="flex items-center justify-between text-xs font-serif">
+                      <strong className="text-[#F2EDE4]">
+                        Suspeito associado: <span className="text-[#B79A70]">{target?.name || conn.toEvidenceOrSuspectId}</span>
+                      </strong>
+                      <span className="stamp-confidential text-[8px]">LINHA #{conn.id.substring(0, 4)}</span>
+                    </div>
+
+                    <p className="text-xs text-[#C2B7AA] italic font-serif">
+                      "{conn.hypothesisLabel}"
+                    </p>
                   </div>
-                  <div className="text-primary font-medium">{c.hypothesisLabel}</div>
-                </div>
-              ))
+                );
+              })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* INSPECT EVIDENCE MODAL (AGED PAPER DOSSIER) */}
+      {inspectEvidence && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm noir-paper p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between border-b border-[#30231C]/30 pb-2">
+              <div>
+                <EvidenceStamp code={inspectEvidence.id.substring(0, 6)} />
+                <span className="text-[10px] font-mono text-[#5A4335] block mt-1">
+                  LOCAL: {inspectEvidence.roomId}
+                </span>
+              </div>
+              <button
+                onClick={() => setInspectEvidence(null)}
+                className="text-[#30231C] hover:opacity-70 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-[#30231C]">
+              <h2 className="font-serif font-bold text-xl leading-tight">
+                {inspectEvidence.title}
+              </h2>
+              <p className="text-xs font-sans leading-relaxed">
+                {inspectEvidence.shortDescription}
+              </p>
+              {inspectEvidence.detailedFindings && (
+                <p className="text-xs font-serif italic text-[#4A3A32] bg-[#D4C4A8] p-2.5 rounded border border-[#B09B7A]/60">
+                  {inspectEvidence.detailedFindings}
+                </p>
+              )}
+              <div className="p-3 bg-[#C8B89C] rounded border border-[#B09B7A] text-[11px] font-mono">
+                <span>CONFIABILIDADE PERICIAL: </span>
+                <strong>100% REGISTRADO NO MOTOR</strong>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setInspectEvidence(null)}
+              className="w-full py-3 rounded-lg border border-[#30231C]/50 text-xs font-serif text-[#30231C] font-bold uppercase tracking-wider hover:bg-[#C8B89C]"
+            >
+              Guardar no Dossiê
+            </button>
           </div>
         </div>
       )}

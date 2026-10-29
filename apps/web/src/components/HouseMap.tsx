@@ -10,7 +10,7 @@ import {
   Utensils,
   Waves,
   MapPin,
-  ShieldAlert,
+  Pin,
 } from "lucide-react";
 
 interface HouseMapProps {
@@ -25,18 +25,18 @@ export const HouseMap: React.FC<HouseMapProps> = ({
   onSelectRoom,
 }) => {
   return (
-    <div className="relative w-full aspect-[4/3] bg-background-dark border border-border rounded-2xl overflow-hidden p-3 shadow-inner">
-      {/* Blueprint background grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#142030_1px,transparent_1px),linear-gradient(to_bottom,#142030_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-30" />
+    <div className="relative w-full aspect-[4/3] bg-[#0F0D0B] border border-[#4A3A32] rounded-2xl overflow-hidden p-3 shadow-noir-card">
+      {/* Antique architectural grid lines */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#261F1A_1px,transparent_1px),linear-gradient(to_bottom,#261F1A_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-40 pointer-events-none" />
 
       {/* Decorative Blueprint Headers */}
-      <div className="absolute top-2 left-3 flex items-center gap-1.5 z-10 text-[9px] font-mono text-muted uppercase">
-        <span className="w-1.5 h-1.5 rounded-full bg-investigation" />
-        <span>PLANTA ESQUEMÁTICA // A CASA</span>
+      <div className="absolute top-2.5 left-3 flex items-center gap-1.5 z-10 text-[9px] font-mono text-[#B79A70] uppercase">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#B79A70]" />
+        <span>PLANTA DA MANSÃO // 7 AMBIENTES</span>
       </div>
 
-      <div className="absolute top-2 right-3 z-10 text-[9px] font-mono text-muted">
-        7 AMBIENTES MAPEADOS
+      <div className="absolute top-2.5 right-3 z-10 text-[9px] font-mono text-[#C2B7AA]/70">
+        ESQUEMA RESIDENCIAL
       </div>
 
       {/* Rooms Floorplan Layout Grid */}
@@ -76,21 +76,21 @@ function renderRoomTile(
       }}
       className={`relative rounded-xl p-2 flex flex-col justify-between text-left transition-all active:scale-95 border ${spanClass} ${
         isCurrent
-          ? "bg-investigation/15 border-investigation shadow-hud-cyan text-primary"
-          : "bg-surface/80 border-border hover:border-investigation/50 text-secondary"
+          ? "bg-[#25201B] border-[#B79A70] shadow-noir-brass text-[#F2EDE4]"
+          : "bg-[#14110E] border-[#382B24] hover:border-[#B79A70]/50 text-[#C2B7AA]"
       }`}
     >
       <div className="flex items-center justify-between w-full">
-        <span className="text-[9px] font-mono uppercase tracking-wider text-muted">
+        <span className="text-[8px] font-mono uppercase tracking-wider text-[#B79A70]">
           {room.category}
         </span>
         {isCurrent ? (
-          <span className="flex items-center gap-1 text-[9px] font-mono text-investigation font-bold">
-            <span className="w-2 h-2 rounded-full bg-investigation animate-ping" />
+          <span className="flex items-center gap-1 text-[8px] font-mono text-[#F2EDE4] bg-[#B79A70]/30 px-1.5 py-0.2 rounded border border-[#B79A70]/50 font-bold">
+            <Pin className="w-2.5 h-2.5 text-[#B79A70] fill-current" />
             VOCÊ
           </span>
         ) : (
-          <span className="text-[10px] text-muted opacity-60">●</span>
+          <span className="text-[8px] text-[#4A3A32]">●</span>
         )}
       </div>
 
@@ -98,8 +98,8 @@ function renderRoomTile(
         <div className="flex items-center gap-1.5">
           {getRoomIcon(room.id, isCurrent)}
           <span
-            className={`text-xs font-bold font-display truncate ${
-              isCurrent ? "text-investigation" : "text-primary"
+            className={`text-xs font-serif font-bold truncate ${
+              isCurrent ? "text-[#F2EDE4]" : "text-[#C2B7AA]"
             }`}
           >
             {room.name}
@@ -111,7 +111,7 @@ function renderRoomTile(
 }
 
 function getRoomIcon(roomId: string, isCurrent: boolean) {
-  const cls = `w-3.5 h-3.5 shrink-0 ${isCurrent ? "text-investigation" : "text-secondary"}`;
+  const cls = `w-3.5 h-3.5 shrink-0 ${isCurrent ? "text-[#B79A70]" : "text-[#C2B7AA]/70"}`;
   switch (roomId) {
     case "sala": return <Armchair className={cls} />;
     case "escritorio": return <Briefcase className={cls} />;

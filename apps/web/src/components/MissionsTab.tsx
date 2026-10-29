@@ -7,13 +7,13 @@ import {
   Lock,
   MapPin,
   Clock,
-  Info,
-  Terminal,
+  FileText,
   ShieldCheck,
   ChevronRight,
-  Sparkles,
+  X,
 } from "lucide-react";
 import { sound } from "../lib/audio";
+import { ConfidentialStamp, NoirSectionHeader } from "./ui/NoirComponents";
 
 interface MissionsTabProps {
   privateState: PlayerPrivateView;
@@ -25,7 +25,7 @@ export const MissionsTab: React.FC<MissionsTabProps> = ({
   onStartMission,
 }) => {
   const [selectedMission, setSelectedMission] = useState<MissionInstance | null>(null);
-  const [filter, setFilter] = useState<"ALL" | "AVAILABLE" | "COMPLETED">("ALL");
+  const [filter, setFilter] = useState<"AVAILABLE" | "ALL" | "COMPLETED">("AVAILABLE");
 
   const filtered = privateState.missions.filter((m) => {
     if (filter === "AVAILABLE") return m.status === "AVAILABLE" || m.status === "IN_PROGRESS";
@@ -34,15 +34,21 @@ export const MissionsTab: React.FC<MissionsTabProps> = ({
   });
 
   const handleStart = (mission: MissionInstance) => {
-    sound.playTap();
+    sound.playTypewriterClick();
     onStartMission(mission.id);
   };
 
   return (
-    <div className="space-y-4 pb-24 animate-in fade-in duration-300">
-      {/* FILTER TABS WITH TACTICAL STYLE */}
-      <div className="flex bg-surface-elevated/90 p-1 rounded-xl border border-border shadow-inner">
-        {(["ALL", "AVAILABLE", "COMPLETED"] as const).map((tab) => {
+    <div className="space-y-4 pb-28 animate-fade-in-dramatic">
+      <NoirSectionHeader
+        title="Ordens & Perícias"
+        subtitle="Tarefas e intervenções confidenciais do caso"
+        badge="PROTOCOLO INVESTIGATIVO"
+      />
+
+      {/* FILTER TABS */}
+      <div className="flex bg-[#171411] p-1 rounded-xl border border-[#4A3A32] shadow-inner">
+        {(["AVAILABLE", "ALL", "COMPLETED"] as const).map((tab) => {
           const count =
             tab === "ALL"
               ? privateState.missions.length
@@ -59,12 +65,16 @@ export const MissionsTab: React.FC<MissionsTabProps> = ({
               }}
               className={`flex-1 py-2 text-xs font-mono font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                 filter === tab
-                  ? "bg-investigation text-background shadow-md shadow-investigation/20"
-                  : "text-secondary hover:text-primary"
+                  ? "bg-[#2A231C] text-[#F2EDE4] border border-[#B79A70]/50 shadow-sm"
+                  : "text-[#C2B7AA] hover:text-[#F2EDE4]"
               }`}
             >
-              <span>{tab === "ALL" ? "Todas" : tab === "AVAILABLE" ? "Ativas" : "Concluídas"}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${filter === tab ? "bg-black/20 text-black" : "bg-border text-muted"}`}>
+              <span>{tab === "AVAILABLE" ? "Ativas" : tab === "ALL" ? "Todas" : "Concluídas"}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                  filter === tab ? "bg-[#B79A70] text-[#120F0D] font-bold" : "bg-[#25201C] text-[#C2B7AA]"
+                }`}
+              >
                 {count}
               </span>
             </button>
@@ -72,13 +82,17 @@ export const MissionsTab: React.FC<MissionsTabProps> = ({
         })}
       </div>
 
-      {/* MISSIONS TERMINAL LIST */}
+      {/* MISSIONS CARDS LIST */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="p-10 text-center game-panel text-secondary text-xs space-y-2">
-            <Terminal className="w-8 h-8 text-muted mx-auto opacity-50" />
-            <p className="font-bold text-primary">Nenhuma missão encontrada neste filtro.</p>
-            <p className="text-muted text-[11px]">Verifique a aba 'Todas' para o histórico completo.</p>
+          <div className="p-8 text-center noir-card text-[#C2B7AA] text-xs space-y-2 border-dashed">
+            <FileText className="w-8 h-8 text-[#B79A70] mx-auto opacity-40" />
+            <p className="font-serif font-bold text-[#F2EDE4] text-sm">
+              Nenhuma ordem pendente neste arquivo.
+            </p>
+            <p className="text-[11px] text-[#C2B7AA]">
+              Consulte a aba 'Todas' para inspecionar registros arquivados.
+            </p>
           </div>
         ) : (
           filtered.map((mission) => {
@@ -89,144 +103,172 @@ export const MissionsTab: React.FC<MissionsTabProps> = ({
             return (
               <div
                 key={mission.id}
-                className={`game-panel p-4 transition-all relative overflow-hidden ${
-                  isCompleted ? "opacity-60 border-border" : "hover:border-investigation/80"
+                className={`noir-card p-4 transition-all relative overflow-hidden ${
+                  isCompleted ? "opacity-60 border-[#302621]" : "hover:border-[#B79A70]/70"
                 }`}
               >
-                {/* Status Header */}
+                {/* Header Badge */}
                 <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="space-y-0.5">
-                    <span className="text-[9px] font-mono text-investigation uppercase font-bold tracking-widest bg-investigation/10 px-2 py-0.5 rounded border border-investigation/30">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-mono text-[#B79A70] uppercase font-bold tracking-widest bg-[#221D19] px-2 py-0.5 rounded border border-[#4A3A32]">
                       ORDEM // {mission.category}
                     </span>
-                    <h3 className="text-sm font-bold text-primary font-display mt-1">
-                      {mission.title}
-                    </h3>
+                    {mission.neutralizesTrapId && (
+                      <span className="text-[9px] font-mono text-[#73917B] font-bold tracking-wider">
+                        • PROTEÇÃO
+                      </span>
+                    )}
                   </div>
 
-                  {isCompleted ? (
-                    <span className="flex items-center gap-1 text-[10px] font-mono text-protection bg-protection/10 px-2 py-1 rounded-lg border border-protection/30 font-bold">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> CONCLUÍDA
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-mono text-secondary bg-surface-elevated px-2 py-0.5 rounded border border-border">
-                      {mission.status}
-                    </span>
-                  )}
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-semibold ${
+                      isCompleted
+                        ? "bg-[#73917B]/10 text-[#73917B] border border-[#73917B]/30"
+                        : "bg-[#2E2721] text-[#D8C8AC] border border-[#4A3A32]"
+                    }`}
+                  >
+                    {isCompleted ? "CONCLUÍDA" : "DISPONÍVEL"}
+                  </span>
                 </div>
 
-                <p className="text-xs text-secondary mb-3.5 leading-relaxed font-sans">
+                {/* Title & Description */}
+                <h3 className="font-serif font-bold text-base text-[#F2EDE4] tracking-wide mb-1">
+                  {mission.title}
+                </h3>
+                <p className="text-xs text-[#C2B7AA] line-clamp-2 leading-relaxed mb-3">
                   {mission.description}
                 </p>
 
-                {/* Location requirement banner */}
+                {/* Room Requirement Notice */}
                 {mission.requiredRoomId && (
-                  <div
-                    className={`flex items-center gap-2 text-xs p-2.5 rounded-xl border mb-3 font-mono ${
-                      roomMatches
-                        ? "bg-protection/10 border-protection/30 text-protection"
-                        : "bg-alert/10 border-alert/30 text-alert"
-                    }`}
-                  >
-                    <MapPin className="w-4 h-4 shrink-0" />
-                    <span>Local:</span>
-                    <strong className="capitalize">
-                      {mission.requiredRoomId.replace("_", " ")}
+                  <div className="flex items-center gap-1.5 text-[11px] mb-3 text-[#C2B7AA]">
+                    <MapPin className="w-3.5 h-3.5 text-[#B79A70]" />
+                    <span>Ambiente exigido: </span>
+                    <strong
+                      className={
+                        roomMatches
+                          ? "text-[#73917B] font-mono"
+                          : "text-[#F1A8A4] font-mono underline"
+                      }
+                    >
+                      {mission.requiredRoomId} {roomMatches ? "(Você está aqui)" : "(Vá até o cômodo)"}
                     </strong>
-                    {!roomMatches && (
-                      <span className="text-[10px] opacity-80">(Vá até lá)</span>
-                    )}
                   </div>
                 )}
 
-                {/* Action Row */}
-                {!isCompleted && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-border/80">
-                    <button
-                      onClick={() => {
-                        sound.playTap();
-                        setSelectedMission(mission);
-                      }}
-                      className="px-3.5 py-2.5 bg-surface-elevated border border-border text-secondary hover:text-primary rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 active:scale-95 transition-all"
-                    >
-                      <Info className="w-3.5 h-3.5" /> Detalhes
-                    </button>
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-1 border-t border-[#4A3A32]/40">
+                  <button
+                    onClick={() => {
+                      sound.playPaperRustle();
+                      setSelectedMission(mission);
+                    }}
+                    className="flex-1 py-2.5 px-3 rounded-lg bg-[#221D19] hover:bg-[#2A231C] border border-[#4A3A32] text-xs font-serif text-[#F2EDE4] flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#B79A70]" />
+                    <span>Examinar Ordem</span>
+                  </button>
 
+                  {!isCompleted && (
                     <button
                       onClick={() => handleStart(mission)}
                       disabled={!roomMatches}
-                      className={`flex-1 py-2.5 text-xs font-bold font-display uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                      className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
                         roomMatches
-                          ? "tactile-btn-primary"
-                          : "bg-surface-elevated text-muted border border-border opacity-50 cursor-not-allowed"
+                          ? "noir-btn-primary"
+                          : "bg-[#1E1915] text-[#C2B7AA]/50 border border-[#3A2E26] cursor-not-allowed"
                       }`}
                     >
-                      {roomMatches ? (
-                        <>
-                          <Play className="w-3.5 h-3.5 fill-current" /> Iniciar Missão
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-3.5 h-3.5" /> Vá para o Ambiente
-                        </>
-                      )}
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>{roomMatches ? "Executar" : "Cômodo Incorreto"}</span>
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })
         )}
       </div>
 
-      {/* CLASSIFIED DETAILS MODAL */}
+      {/* CONFIDENTIAL MISSION DETAILS MODAL (AGED PARCHMENT PAPER LOOK) */}
       {selectedMission && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-sm game-panel p-5 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <span className="text-[10px] font-mono text-investigation font-bold uppercase tracking-widest">
-                INSTRUÇÕES PERICIAIS
-              </span>
-              <span className="text-[10px] font-mono text-muted">ID #{selectedMission.id.slice(-4)}</span>
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm noir-paper p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            {/* Header Stamp */}
+            <div className="flex items-start justify-between border-b border-[#30231C]/30 pb-3">
+              <div>
+                <span className="stamp-order">ORDEM RECEBIDA</span>
+                <span className="text-[10px] font-mono text-[#5A4335] block mt-1">
+                  PROTOCOLO: {selectedMission.id.toUpperCase().substring(0, 16)}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  sound.playTap();
+                  setSelectedMission(null);
+                }}
+                className="text-[#30231C] hover:opacity-70 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div>
-              <h3 className="text-base font-bold font-display text-primary">
+            {/* Document Content */}
+            <div className="space-y-3 text-[#30231C]">
+              <h2 className="font-serif font-bold text-xl leading-tight">
                 {selectedMission.title}
-              </h3>
-              <p className="text-xs text-secondary mt-1.5 leading-relaxed">
+              </h2>
+
+              <p className="text-xs leading-relaxed font-sans opacity-90">
                 {selectedMission.description}
               </p>
+
+              <div className="p-3 bg-[#C8B89C] rounded border border-[#B09B7A] text-[11px] space-y-1">
+                <span className="font-mono font-bold block uppercase tracking-wide">
+                  Classificação da Tarefa:
+                </span>
+                <p className="opacity-80">
+                  {selectedMission.category === "INVESTIGATION"
+                    ? "Recuperação pericial: desbloqueia laudos e evidências ao ser resolvida."
+                    : selectedMission.neutralizesTrapId
+                    ? "Intervenção de segurança: neutraliza ameaças e protege os sobreviventes."
+                    : selectedMission.category === "SURVIVAL"
+                    ? "Sobrevivência: restauração de suporte e contenção de danos."
+                    : "Manutenção: restabelece sistemas e registros da residência."}
+                </p>
+              </div>
+
+              {selectedMission.requiredRoomId && (
+                <div className="text-xs font-mono">
+                  <span>Local de Execução: </span>
+                  <strong className="underline font-bold">
+                    {selectedMission.requiredRoomId}
+                  </strong>
+                </div>
+              )}
             </div>
 
-            <div className="p-3 bg-surface-elevated rounded-xl border border-border text-xs text-secondary space-y-1.5 font-mono">
-              <div className="flex justify-between">
-                <span>CATEGORIA:</span>
-                <strong className="text-primary">{selectedMission.category}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span>MINIGAME:</span>
-                <strong className="text-investigation">{selectedMission.minigameId}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span>AMBIENTE:</span>
-                <strong className="text-primary capitalize">
-                  {selectedMission.requiredRoomId ? selectedMission.requiredRoomId.replace("_", " ") : "Qualquer Local"}
-                </strong>
-              </div>
-            </div>
+            {/* CTAs */}
+            <div className="pt-2 flex gap-2">
+              <button
+                onClick={() => setSelectedMission(null)}
+                className="flex-1 py-3 rounded-lg border border-[#30231C]/40 text-xs font-serif text-[#30231C] hover:bg-[#C8B89C] font-semibold"
+              >
+                Fechar Arquivo
+              </button>
 
-            <div className="p-2.5 bg-background border border-border rounded-xl text-[11px] text-muted flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-protection shrink-0" />
-              <span>A visualização dos detalhes é sempre 100% segura.</span>
+              {selectedMission.status !== "COMPLETED" && (
+                <button
+                  onClick={() => {
+                    handleStart(selectedMission);
+                    setSelectedMission(null);
+                  }}
+                  className="flex-1 py-3 noir-btn-paper text-xs uppercase tracking-wider font-bold shadow-md"
+                >
+                  Iniciar Ordem
+                </button>
+              )}
             </div>
-
-            <button
-              onClick={() => setSelectedMission(null)}
-              className="w-full py-2.5 bg-surface-elevated border border-border text-primary rounded-xl text-xs font-bold active:scale-95"
-            >
-              Fechar Instruções
-            </button>
           </div>
         </div>
       )}

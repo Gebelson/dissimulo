@@ -9,6 +9,7 @@ import { sound } from "./lib/audio";
 import { DissimuloLogo } from "./components/ui/DissimuloLogo";
 import { RoleRevealModal } from "./components/ui/RoleRevealModal";
 import { OnboardingOverlay } from "./components/ui/OnboardingOverlay";
+import { WelcomeScreen } from "./components/WelcomeScreen";
 import { HomeTab } from "./components/HomeTab";
 import { MissionsTab } from "./components/MissionsTab";
 import { ExploreTab } from "./components/ExploreTab";
@@ -29,8 +30,6 @@ import {
   Settings,
   Volume2,
   VolumeX,
-  Skull,
-  Radio,
 } from "lucide-react";
 
 export function App() {
@@ -121,6 +120,7 @@ export function App() {
     };
   }, [joined, roomCode, playerId, playerName]);
 
+  // Dispatch Action
   const sendAction = (action: ClientAction) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(action));
@@ -132,71 +132,33 @@ export function App() {
     setSoundEnabled(!soundEnabled);
   };
 
-  // 1. WELCOME / JOIN SCREEN
+  // 1. WELCOME / JOIN SCREEN (NOIR HERO WITH MANOR ATMOSPHERE)
   if (!joined) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 select-none">
-        <div className="w-full max-w-sm game-panel p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
-          <DissimuloLogo size="lg" />
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!playerName.trim() || !roomCode.trim()) return;
-              sound.playTap();
-              localStorage.setItem("dissimulo_name", playerName);
-              setJoined(true);
-            }}
-            className="space-y-4 pt-2"
-          >
-            <div>
-              <label className="text-[10px] font-mono text-muted uppercase font-bold tracking-wider block mb-1">
-                SEU CODINOME DE CAMPO:
-              </label>
-              <input
-                type="text"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Ex: Inspetor Arthur"
-                className="w-full bg-background border border-border rounded-xl p-3 text-xs text-primary outline-none focus:border-investigation font-sans"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] font-mono text-muted uppercase font-bold tracking-wider block mb-1">
-                CÓDIGO DE ENTRADA NA RESIDÊNCIA:
-              </label>
-              <input
-                type="text"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                placeholder="Ex: CASA8"
-                className="w-full bg-background border border-border rounded-xl p-3 text-sm font-mono font-bold text-investigation tracking-widest outline-none focus:border-investigation uppercase"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 tactile-btn-primary rounded-xl font-display font-bold text-xs uppercase tracking-wider active:scale-95 transition-all shadow-lg shadow-investigation/20"
-            >
-              Conectar ao Terminal da Casa
-            </button>
-          </form>
-        </div>
-      </div>
+      <>
+        <WelcomeScreen
+          initialRoomCode={roomCode}
+          initialPlayerName={playerName}
+          onJoin={(code, name) => {
+            setRoomCode(code);
+            setPlayerName(name);
+            setJoined(true);
+          }}
+          onOpenRules={() => setShowOnboarding(true)}
+        />
+        {showOnboarding && <OnboardingOverlay onDismiss={() => setShowOnboarding(false)} />}
+      </>
     );
   }
 
   // 2. CONNECTING STATE
   if (!publicState || !privateState) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center space-y-4 select-none">
-        <DissimuloLogo size="sm" subtitle={false} />
-        <div className="w-10 h-10 border-2 border-investigation border-t-transparent rounded-full animate-spin shadow-hud-cyan" />
-        <span className="text-xs font-mono text-secondary tracking-widest">
-          ESTABELECENDO CANAL SEGURO...
+      <div className="min-h-screen bg-[#0C0B0A] flex flex-col items-center justify-center p-4 text-center space-y-4 select-none">
+        <DissimuloLogo size="md" subtitle={false} />
+        <div className="w-10 h-10 border-2 border-[#B79A70] border-t-transparent rounded-full animate-spin shadow-noir-brass" />
+        <span className="text-xs font-mono text-[#C2B7AA] tracking-widest uppercase">
+          ESTABELECENDO CANAL SEGURO COM A MANSÃO...
         </span>
       </div>
     );
@@ -233,22 +195,22 @@ export function App() {
   const isHost = me?.isHost || false;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
-      {/* TOP DIEGETIC HUD BAR */}
-      <header className="px-4 py-2.5 border-b border-border bg-surface/95 backdrop-blur-md flex items-center justify-between sticky top-0 z-40">
+    <div className="min-h-screen bg-[#0C0B0A] flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
+      {/* TOP EDITORIAL HUD BAR */}
+      <header className="px-4 py-2.5 border-b border-[#4A3A32] bg-[#14110E]/95 backdrop-blur-md flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2">
           <DissimuloLogo size="sm" subtitle={false} />
-          <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-2 py-0.5 rounded border border-investigation/30 font-bold">
-            {roomCode}
+          <span className="text-[9px] font-mono text-[#B79A70] bg-[#221D19] px-2 py-0.5 rounded border border-[#4A3A32] font-bold">
+            CASO: {roomCode}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <button
             onClick={toggleSound}
-            className="p-2 text-secondary hover:text-primary rounded-xl active:scale-95 bg-surface-elevated border border-border"
+            className="p-2 text-[#C2B7AA] hover:text-[#F2EDE4] rounded-xl active:scale-95 bg-[#221D19] border border-[#4A3A32]"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-investigation" /> : <VolumeX className="w-4 h-4 text-danger" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-[#B79A70]" /> : <VolumeX className="w-4 h-4 text-[#9F3D3D]" />}
           </button>
 
           {isHost && (
@@ -257,7 +219,7 @@ export function App() {
                 sound.playTap();
                 setShowHostPanel(true);
               }}
-              className="p-2 text-secondary hover:text-investigation rounded-xl active:scale-95 bg-surface-elevated border border-border"
+              className="p-2 text-[#C2B7AA] hover:text-[#B79A70] rounded-xl active:scale-95 bg-[#221D19] border border-[#4A3A32]"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -316,8 +278,8 @@ export function App() {
         )}
       </main>
 
-      {/* 4-TAB TACTICAL BOTTOM NAVIGATION */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface/98 backdrop-blur-xl border-t border-border z-40 max-w-md mx-auto shadow-2xl">
+      {/* 4-TAB EDITORIAL NOIR BOTTOM NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#14110E]/98 backdrop-blur-md border-t border-[#4A3A32] z-40 max-w-md mx-auto shadow-2xl">
         <div className="grid grid-cols-4 h-16 items-center">
           <button
             onClick={() => {
@@ -326,8 +288,8 @@ export function App() {
             }}
             className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all ${
               currentTab === "HOME"
-                ? "text-investigation font-bold scale-105"
-                : "text-secondary hover:text-primary"
+                ? "text-[#B79A70] font-bold"
+                : "text-[#C2B7AA] hover:text-[#F2EDE4]"
             }`}
           >
             <Home className="w-5 h-5" />
@@ -341,14 +303,14 @@ export function App() {
             }}
             className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all relative ${
               currentTab === "MISSIONS"
-                ? "text-investigation font-bold scale-105"
-                : "text-secondary hover:text-primary"
+                ? "text-[#B79A70] font-bold"
+                : "text-[#C2B7AA] hover:text-[#F2EDE4]"
             }`}
           >
             <FileCheck2 className="w-5 h-5" />
             <span className="text-[10px] font-mono tracking-wider">Missões</span>
             {privateState.missions.filter((m) => m.status === "AVAILABLE").length > 0 && (
-              <span className="absolute top-2 right-6 w-2 h-2 rounded-full bg-investigation shadow-hud-cyan animate-pulse" />
+              <span className="absolute top-2 right-6 w-2 h-2 rounded-full bg-[#9F3D3D] animate-pulse" />
             )}
           </button>
 
@@ -359,8 +321,8 @@ export function App() {
             }}
             className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all ${
               currentTab === "EXPLORE"
-                ? "text-investigation font-bold scale-105"
-                : "text-secondary hover:text-primary"
+                ? "text-[#B79A70] font-bold"
+                : "text-[#C2B7AA] hover:text-[#F2EDE4]"
             }`}
           >
             <Compass className="w-5 h-5" />
@@ -374,8 +336,8 @@ export function App() {
             }}
             className={`flex flex-col items-center justify-center gap-1 active:scale-90 transition-all ${
               currentTab === "DOSSIER"
-                ? "text-investigation font-bold scale-105"
-                : "text-secondary hover:text-primary"
+                ? "text-[#B79A70] font-bold"
+                : "text-[#C2B7AA] hover:text-[#F2EDE4]"
             }`}
           >
             <FolderSearch className="w-5 h-5" />

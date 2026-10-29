@@ -20,25 +20,25 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ onDismiss 
 
   const slides = [
     {
-      title: "01. A Mansão Real (7 Cômodos)",
+      title: "01. A Mansão Real (7 Ambientes)",
       subtitle: "INVESTIGAÇÃO PRESENCIAL",
-      icon: <Compass className="w-10 h-10 text-investigation" />,
-      text: "Vocês estão fisicamente em uma casa com 7 cômodos. Na aba Explorar, você visualiza a planta e declara o ambiente onde está. Lembre-se: banheiro e suíte têm checagem na porta!",
-      color: "border-investigation shadow-hud-cyan",
+      icon: <Compass className="w-10 h-10 text-[#B79A70]" />,
+      text: "Vocês estão fisicamente em uma casa real com 7 cômodos mapeados. Na aba Explorar, você declara o ambiente onde está. Lembre-se: banheiro e suíte possuem checagem na porta!",
+      badge: "PROTOCOLO DE LOCALIZAÇÃO",
     },
     {
-      title: "02. Perícia & Dossiê Coletivo",
+      title: "02. Perícia & Dossiê do Caso",
       subtitle: "RECUPERAÇÃO DE PROVAS REAIS",
-      icon: <FileSearch className="w-10 h-10 text-protection" />,
-      text: "Vá aos cômodos e toque em 'Investigar Este Ambiente' para desbloquear laudos, registros e depoimentos reais. Resolva os minigames para restabelecer os sistemas.",
-      color: "border-protection",
+      icon: <FileSearch className="w-10 h-10 text-[#73917B]" />,
+      text: "Dirija-se aos cômodos da casa e toque em 'Investigar Este Ambiente' para desbloquear laudos, registros e depoimentos. Resolva as perícias para desvendar o assassino.",
+      badge: "COLETA FORENSE",
     },
     {
       title: "03. Armadilhas Mortais Virtuais",
       subtitle: "NÃO CONFIE EM NINGUÉM",
-      icon: <Skull className="w-10 h-10 text-danger" />,
-      text: "Um de vocês é o assassino! Ele cria missões falsas idênticas às normais. Se você iniciar a armadilha armada, morrerá imediatamente. Sobreviventes podem neutralizá-las antes!",
-      color: "border-danger shadow-hud-crimson",
+      icon: <Skull className="w-10 h-10 text-[#F1A8A4]" />,
+      text: "Um de vocês é o assassino! Ele cria ordens disfarçadas que parecem legítimas. Se você iniciar a armadilha armada, morrerá imediatamente. Sobreviventes podem neutralizá-las antes!",
+      badge: "ALERTA MÁXIMO",
     },
   ];
 
@@ -54,19 +54,19 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ onDismiss 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="w-full max-w-sm bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-5 flex flex-col justify-between min-h-[380px]">
+    <div className="fixed inset-0 z-50 bg-black/92 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="w-full max-w-sm noir-card p-6 shadow-2xl space-y-5 flex flex-col justify-between min-h-[400px] border-[#4A3A32]">
         {/* Top Header */}
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono uppercase text-investigation font-bold tracking-widest">
-            BRIEFING TÁTICO // PASSO {slide + 1} DE 3
+        <div className="flex items-center justify-between border-b border-[#4A3A32]/60 pb-2">
+          <span className="text-[10px] font-mono uppercase text-[#B79A70] font-bold tracking-[0.2em]">
+            INSTRUÇÕES DO CASO // {slide + 1} DE 3
           </span>
           <button
             onClick={() => {
               sound.playTap();
               onDismiss();
             }}
-            className="text-secondary hover:text-primary p-1"
+            className="text-[#C2B7AA] hover:text-[#F2EDE4] p-1"
           >
             <X className="w-4 h-4" />
           </button>
@@ -74,22 +74,20 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ onDismiss 
 
         {/* Slide Content */}
         <div className="space-y-4 text-center my-auto">
-          <div
-            className={`w-20 h-20 mx-auto rounded-2xl bg-surface-elevated flex items-center justify-center border ${current.color}`}
-          >
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-[#1C1814] flex items-center justify-center border border-[#4A3A32] shadow-noir-card">
             {current.icon}
           </div>
 
           <div>
-            <span className="text-[10px] font-mono text-muted uppercase tracking-wider block">
-              {current.subtitle}
+            <span className="text-[10px] font-mono text-[#B79A70] uppercase tracking-wider block">
+              {current.badge}
             </span>
-            <h3 className="text-lg font-bold font-display text-primary mt-0.5">
+            <h3 className="text-xl font-serif font-bold text-[#F2EDE4] mt-0.5">
               {current.title}
             </h3>
           </div>
 
-          <p className="text-xs text-secondary leading-relaxed px-2">
+          <p className="text-xs text-[#C2B7AA] leading-relaxed px-2 font-sans">
             {current.text}
           </p>
         </div>
@@ -101,8 +99,8 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ onDismiss 
             {slides.map((_, i) => (
               <span
                 key={i}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === slide ? "bg-investigation w-6" : "bg-border"
+                className={`h-1.5 rounded-full transition-all ${
+                  i === slide ? "bg-[#B79A70] w-6" : "bg-[#4A3A32] w-1.5"
                 }`}
               />
             ))}
@@ -110,9 +108,9 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({ onDismiss 
 
           <button
             onClick={handleNext}
-            className="w-full py-3 tactile-btn-primary flex items-center justify-center gap-1.5 active:scale-95 text-xs font-bold uppercase tracking-wider"
+            className="w-full py-3.5 noir-btn-primary flex items-center justify-center gap-1.5 active:scale-95 text-xs font-serif font-bold uppercase tracking-widest shadow-md"
           >
-            <span>{slide === slides.length - 1 ? "Entendido, Começar!" : "Próximo Passo"}</span>
+            <span>{slide === slides.length - 1 ? "Entendido, Começar!" : "Avançar"}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

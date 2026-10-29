@@ -84,59 +84,53 @@ export const MinigamePlayer: React.FC<MinigamePlayerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/92 backdrop-blur-xl flex flex-col items-center justify-center p-3 sm:p-4 select-none">
-      {/* TACTICAL HARDWARE FIELD CONSOLE CASING */}
-      <div className="w-full max-w-md bg-surface-elevated border-2 border-border rounded-3xl flex flex-col overflow-hidden shadow-2xl relative">
-        {/* Hardware Corner Rivets / Screws */}
-        <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-border shadow-inner" />
-        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-border shadow-inner" />
-        <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-border shadow-inner" />
-        <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-border shadow-inner" />
-
-        {/* Console Header Bar */}
-        <div className="px-5 py-3.5 border-b border-border bg-surface flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-black/92 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-4 select-none">
+      {/* NOIR CRIMINAL INVESTIGATION FRAME */}
+      <div className="w-full max-w-md noir-card border-[#4A3A32] flex flex-col overflow-hidden shadow-2xl relative">
+        {/* Header Bar */}
+        <div className="px-5 py-3.5 border-b border-[#4A3A32] bg-[#14110E] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-investigation/10 border border-investigation/30 flex items-center justify-center text-investigation shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-[#221D19] border border-[#4A3A32] flex items-center justify-center text-[#B79A70] shadow-sm">
               <Terminal className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[9px] font-mono tracking-widest text-investigation uppercase font-extrabold block">
-                TERMINAL PERICIAL // CAMPO
+              <span className="text-[9px] font-mono tracking-widest text-[#B79A70] uppercase font-bold block">
+                PEÇA PERICIAL // CASO
               </span>
-              <h3 className="text-sm font-bold text-primary font-display">
+              <h3 className="text-base font-serif font-bold text-[#F2EDE4] leading-tight">
                 {getMinigameTitle(challenge.minigameId)}
               </h3>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 font-mono text-xs text-alert bg-alert/10 px-2 py-1 rounded-lg border border-alert/20 font-bold">
-              <Clock className="w-3.5 h-3.5 animate-spin" />
+            <div className="flex items-center gap-1 font-mono text-xs text-[#F2EDE4] bg-[#221D19] px-2.5 py-1 rounded-lg border border-[#4A3A32] font-bold">
+              <Clock className="w-3.5 h-3.5 text-[#B79A70]" />
               <span>{timeLeft}s</span>
             </div>
 
             <button
               onClick={onCancel}
-              className="p-1 text-secondary hover:text-primary rounded-lg active:scale-95"
+              className="p-1 text-[#C2B7AA] hover:text-[#F2EDE4] rounded-lg active:scale-95"
             >
               <XCircle className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* CRT Scanline Bezel Display Area */}
-        <div className="relative bg-background p-4 flex-1 overflow-y-auto min-h-[340px] flex flex-col justify-center">
+        {/* Display Area */}
+        <div className="relative bg-[#0C0B0A] p-4 flex-1 overflow-y-auto min-h-[340px] flex flex-col justify-center">
           {/* Status Overlay Banners */}
           {solved && (
-            <div className="absolute inset-x-4 top-4 z-30 p-3.5 bg-protection/25 text-protection border border-protection/50 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold font-mono shadow-hud-cyan animate-in zoom-in-95">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>HOMOLOGADO // PERÍCIA CONCLUÍDA</span>
+            <div className="absolute inset-x-4 top-4 z-30 p-3.5 bg-[#14231A] text-[#73917B] border border-[#73917B] rounded-xl flex items-center justify-center gap-2 text-xs font-serif font-bold shadow-lg animate-in zoom-in-95">
+              <CheckCircle2 className="w-5 h-5 text-[#73917B]" />
+              <span className="tracking-wide">LAUDO HOMOLOGADO // PROVA RECUPERADA</span>
             </div>
           )}
 
           {errorMsg && (
-            <div className="absolute inset-x-4 top-4 z-30 p-3 bg-danger/25 text-danger border border-danger/50 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold font-mono shadow-hud-crimson animate-in shake">
-              <AlertTriangle className="w-4 h-4" />
+            <div className="absolute inset-x-4 top-4 z-30 p-3 bg-[#241113] text-[#F1A8A4] border border-[#9F3D3D] rounded-xl flex items-center justify-center gap-2 text-xs font-serif font-bold shadow-noir-crimson animate-in shake">
+              <AlertTriangle className="w-4 h-4 text-[#F1A8A4]" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -238,7 +232,7 @@ const CircuitComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =>
               {bottom && <div className="absolute bottom-0 w-2 h-1/2 bg-investigation shadow-sm shadow-investigation" />}
               {left && <div className="absolute left-0 h-2 w-1/2 bg-investigation shadow-sm shadow-investigation" />}
               {right && <div className="absolute right-0 h-2 w-1/2 bg-investigation shadow-sm shadow-investigation" />}
-              <div className="w-3.5 h-3.5 rounded-full bg-primary border-2 border-investigation z-10 shadow-hud-cyan" />
+              <div className="w-3.5 h-3.5 rounded-full bg-primary border-2 border-investigation z-10 shadow-noir-brass" />
             </button>
           );
         })}
@@ -262,7 +256,7 @@ const CipherComponent: React.FC<{ onSuccess: () => void; onFail: (m: string) => 
         Decifre o trecho criptografado utilizando a pista forense:
       </p>
 
-      <div className="bg-surface p-4 rounded-2xl border border-investigation/40 text-center shadow-hud-cyan">
+      <div className="bg-surface p-4 rounded-2xl border border-investigation/40 text-center shadow-noir-brass">
         <span className="text-[10px] text-muted font-mono block mb-1">
           CARIMBO CRIPTOGRÁFICO // DESLOCAMENTO +{challenge.shift}
         </span>
@@ -460,7 +454,7 @@ const SignalMemoryComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
               disabled={showingSequence}
               className={`rounded-2xl border-2 flex items-center justify-center font-bold text-sm font-mono transition-all duration-150 ${
                 isLit
-                  ? "bg-investigation border-investigation text-background scale-105 shadow-hud-cyan"
+                  ? "bg-investigation border-investigation text-background scale-105 shadow-noir-brass"
                   : "bg-surface border-border text-primary hover:border-investigation active:scale-90"
               }`}
             >
@@ -489,7 +483,7 @@ const TracePatternComponent: React.FC<{ onSuccess: () => void; onFail: (m: strin
       </p>
 
       {/* Reference Spectrogram */}
-      <div className="bg-surface p-3.5 rounded-2xl border border-investigation/40 shadow-hud-cyan">
+      <div className="bg-surface p-3.5 rounded-2xl border border-investigation/40 shadow-noir-brass">
         <span className="text-[10px] text-investigation font-mono font-bold block mb-1.5 uppercase">
           {challenge.referenceSample.label}
         </span>
@@ -730,7 +724,7 @@ const SealAuthComponent: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
           <button
             key={ring.id}
             onClick={() => rotate(idx)}
-            className="w-16 h-16 rounded-full border-2 border-investigation flex items-center justify-center text-2xl font-bold bg-surface active:scale-90 transition-transform shadow-hud-cyan"
+            className="w-16 h-16 rounded-full border-2 border-investigation flex items-center justify-center text-2xl font-bold bg-surface active:scale-90 transition-transform shadow-noir-brass"
             style={{ transform: `rotate(${ring.rotation}deg)` }}
           >
             {ring.glyph}

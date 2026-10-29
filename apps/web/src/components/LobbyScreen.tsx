@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { sound } from "../lib/audio";
+import { CharacterPortrait, ConfidentialStamp, NoirSectionHeader } from "./ui/NoirComponents";
 
 interface LobbyScreenProps {
   publicState: PublicGameState;
@@ -48,136 +49,135 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
+    <div className="min-h-screen bg-[#0C0B0A] p-4 flex flex-col justify-between max-w-md mx-auto pt-safe pb-safe select-none">
       {/* Brand Header */}
-      <div className="space-y-4 pt-4 text-center">
-        <DissimuloLogo size="lg" />
+      <div className="space-y-4 pt-2 text-center animate-fade-in-dramatic">
+        <DissimuloLogo size="md" />
 
-        {/* Room Code Card */}
-        <div className="game-panel p-4 flex items-center justify-between mt-4">
+        {/* Room Code Card (Ficha do Caso) */}
+        <div className="noir-card p-4 flex items-center justify-between mt-2">
           <div className="text-left">
-            <span className="text-[9px] text-muted font-mono uppercase font-bold tracking-widest block">
-              CÓDIGO DE ENTRADA NA SALA
+            <span className="text-[9px] text-[#B79A70] font-mono uppercase font-bold tracking-[0.2em] block">
+              CÓDIGO DE ACESSO AO CASO
             </span>
-            <span className="text-3xl font-mono font-extrabold tracking-widest text-investigation">
+            <span className="text-2xl font-mono font-bold tracking-widest text-[#F2EDE4]">
               {publicState.roomCode}
             </span>
           </div>
 
           <button
             onClick={handleCopyCode}
-            className="px-3 py-2 bg-surface-elevated hover:bg-surface border border-border rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 active:scale-95 text-secondary hover:text-primary transition-all"
+            className="px-3.5 py-2.5 bg-[#25201C] hover:bg-[#2F2924] border border-[#4A3A32] rounded-xl text-xs font-mono font-semibold flex items-center gap-1.5 active:scale-95 text-[#F2EDE4] transition-all shadow-sm"
           >
-            <Copy className="w-4 h-4 text-investigation" />
+            <Copy className="w-3.5 h-3.5 text-[#B79A70]" />
             <span>{copied ? "Copiado!" : "Copiar"}</span>
           </button>
         </div>
       </div>
 
-      {/* Connected Players List */}
-      <div className="my-5 space-y-2.5 flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between text-xs text-secondary px-1 font-mono">
+      {/* Connected Players Grid 2xN (Retratos da Galeria) */}
+      <div className="my-4 space-y-3 flex-1 overflow-y-auto">
+        <div className="flex items-center justify-between text-xs text-[#C2B7AA] px-1 font-mono">
           <span className="flex items-center gap-1.5 font-bold">
-            <Users className="w-4 h-4 text-investigation" /> Participantes ({publicState.players.length}/8)
+            <Users className="w-3.5 h-3.5 text-[#B79A70]" /> Participantes Presentes ({publicState.players.length}/8)
           </span>
-          <span className="text-[10px] text-muted">MÍNIMO 4 JOGADORES</span>
+          <span className="text-[10px] text-[#B79A70]">MÍNIMO 4</span>
         </div>
 
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2.5">
           {publicState.players.map((player) => {
             const isMe = player.id === privateState.playerId;
             return (
               <div
                 key={player.id}
-                className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                className={`p-3 rounded-xl border flex flex-col items-center text-center space-y-1.5 transition-all ${
                   isMe
-                    ? "bg-investigation/10 border-investigation/60 shadow-sm"
-                    : "bg-surface border-border"
+                    ? "bg-[#221D19] border-[#B79A70]/70 shadow-noir-card"
+                    : "bg-[#171411] border-[#4A3A32]"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-surface-elevated border border-border flex items-center justify-center font-bold text-xs text-primary font-mono shadow-inner">
-                    {player.name.charAt(0)}
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-primary font-display flex items-center gap-1.5">
-                      {player.name} {isMe && <span className="text-[10px] text-investigation font-mono">(Você)</span>}
-                      {player.isHost && (
-                        <span className="text-[9px] font-mono text-investigation bg-investigation/10 px-1 py-0.2 rounded border border-investigation/30 font-bold">
-                          HOST
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[10px] text-muted font-mono block">
-                      {player.isReady ? "Pronto para jogar" : "Aguardando confirmação"}
-                    </span>
-                  </div>
-                </div>
+                <CharacterPortrait
+                  name={player.name}
+                  status="ALIVE"
+                  size="md"
+                  isReady={player.isReady}
+                />
 
-                {player.isReady ? (
-                  <span className="flex items-center gap-1 text-[10px] font-mono text-protection bg-protection/15 px-2.5 py-1 rounded-lg border border-protection/30 font-bold">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> PRONTO
+                <div className="w-full flex items-center justify-between px-1 text-[9px] font-mono border-t border-[#4A3A32]/40 pt-1">
+                  <span className="text-[#C2B7AA]">
+                    {player.isHost ? "ANFITRIÃO" : "INVESTIGADOR"}
                   </span>
-                ) : (
-                  <span className="text-[10px] font-mono text-muted bg-surface-elevated px-2 py-0.5 rounded border border-border">
-                    PENDENTE
+                  <span className={player.isReady ? "text-[#73917B] font-bold" : "text-[#C2B7AA]/60"}>
+                    {player.isReady ? "CONFIRMADO" : "AGUARDANDO"}
                   </span>
-                )}
+                </div>
               </div>
             );
           })}
         </div>
+
+        {publicState.players.length < 4 && (
+          <div className="p-3 rounded-xl border border-dashed border-[#4A3A32] text-center space-y-1 bg-[#12100E]">
+            <Clock className="w-4 h-4 text-[#B79A70] mx-auto animate-pulse" />
+            <p className="text-xs text-[#C2B7AA] font-serif">
+              Aguardando mais participantes para formar quórum (mínimo 4).
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Action Controls */}
-      <div className="space-y-3 pt-2">
-        <button
-          onClick={() => {
-            sound.playTap();
-            onOpenRules();
-          }}
-          className="w-full py-2.5 bg-surface-elevated border border-border hover:border-investigation/50 text-secondary hover:text-primary rounded-xl text-xs font-mono font-semibold flex items-center justify-center gap-1.5 active:scale-95"
-        >
-          <BookOpen className="w-4 h-4 text-investigation" /> Como Jogar (Briefing e Regras)
-        </button>
-
-        {/* Ready Toggle Button */}
-        <button
-          onClick={() => {
-            sound.playTap();
-            onSetReady(!isReady);
-          }}
-          className={`w-full py-3.5 rounded-xl text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg ${
-            isReady
-              ? "tactile-btn-surface border-protection text-protection"
-              : "tactile-btn-primary"
-          }`}
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{isReady ? "Você está Pronto!" : "Confirmar Que Estou Pronto"}</span>
-        </button>
-
-        {/* Host Start Game Button */}
-        {isHost && (
+      {/* Footer Actions */}
+      <div className="space-y-3 pt-2 border-t border-[#4A3A32]/60">
+        <div className="flex gap-2">
           <button
             onClick={() => {
               sound.playTap();
+              onOpenRules();
+            }}
+            className="flex-1 py-3 noir-btn-secondary text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+          >
+            <BookOpen className="w-4 h-4 text-[#B79A70]" />
+            <span>Regras do Caso</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playTypewriterClick();
+              onSetReady(!isReady);
+            }}
+            className={`flex-1 py-3 text-xs uppercase tracking-wider font-bold rounded-xl border transition-all flex items-center justify-center gap-2 ${
+              isReady
+                ? "bg-[#73917B]/20 text-[#73917B] border-[#73917B]"
+                : "bg-[#25201C] text-[#F2EDE4] border-[#4A3A32]"
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{isReady ? "Pronto ✓" : "Confirmar Presença"}</span>
+          </button>
+        </div>
+
+        {isHost && (
+          <button
+            onClick={() => {
+              sound.playMuffledBell();
               onStartGame();
             }}
             disabled={!canStart}
-            className={`w-full py-3.5 rounded-xl text-xs font-display font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl ${
+            className={`w-full py-4 text-sm font-serif font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all ${
               canStart
-                ? "tactile-btn-primary"
-                : "bg-surface-elevated text-muted border border-border opacity-50 cursor-not-allowed"
+                ? "noir-btn-primary"
+                : "bg-[#1E1915] text-[#C2B7AA]/40 border border-[#3A2E26] cursor-not-allowed"
             }`}
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>
-              {canStart
-                ? "Iniciar Partida (Sortear Papéis)"
-                : `Aguardando Mínimo de 4 Jogadores (${publicState.players.length}/4)`}
-            </span>
+            <span>{canStart ? "Iniciar o Caso Penal" : "Aguardando Quórum (4+)"}</span>
           </button>
+        )}
+
+        {!isHost && (
+          <p className="text-center text-[10px] font-mono text-[#C2B7AA]">
+            Aguardando o anfitrião dar a ordem de início da partida.
+          </p>
         )}
       </div>
     </div>

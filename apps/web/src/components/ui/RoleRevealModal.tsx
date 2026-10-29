@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Role } from "@alibi/contracts";
 import { sound } from "../../lib/audio";
 import {
-  Fingerprint,
   Shield,
   Skull,
   Search,
-  Crosshair,
-  Radio,
-  Wrench,
-  HeartPulse,
   Lock,
   CheckCircle,
+  Eye,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
+import { ConfidentialStamp } from "./NoirComponents";
 
 interface RoleRevealModalProps {
   role?: Role;
@@ -32,7 +31,7 @@ export const RoleRevealModal: React.FC<RoleRevealModalProps> = ({
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (holding && !revealed) {
-      sound.playScanHum();
+      sound.playTypewriterClick();
       timer = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 100) {
@@ -41,14 +40,14 @@ export const RoleRevealModal: React.FC<RoleRevealModalProps> = ({
             if (role === "KILLER") {
               sound.playHeartbeat();
             } else {
-              sound.playEvidenceChime();
+              sound.playPaperRustle();
             }
             return 100;
           }
-          sound.vibrate(20);
-          return prev + 10;
+          sound.vibrate(15);
+          return prev + 12;
         });
-      }, 100);
+      }, 90);
     } else if (!revealed) {
       setProgress(0);
     }
@@ -57,157 +56,205 @@ export const RoleRevealModal: React.FC<RoleRevealModalProps> = ({
 
   const isKiller = role === "KILLER";
 
+  const getRoleDetails = () => {
+    switch (role) {
+      case "KILLER":
+        return {
+          title: "O Assassino",
+          subtitle: "ELIMINE OS SOBREVIVENTES EM SEGREDO",
+          badge: "ALERTA MÁXIMO // CULPADO",
+          desc: "Você é o autor do crime nesta residência. Use seu console secreto para armar armadilhas disfarçadas. Se o alvo iniciar sua armadilha ativa, ele morrerá instantaneamente. Mantenha seu disfarce e confunda os demais nos debates.",
+          objective: "Elimine sobreviventes até alcançar a paridade numérica sem ser desmascarado nas votações.",
+        };
+      case "DETECTIVE":
+        return {
+          title: "O Detetive",
+          subtitle: "LÍDER DA INVESTIGAÇÃO FORENSE",
+          badge: "AUTORIDADE PERICIAL",
+          desc: "Você possui autoridade para autenticar provas cruciais nos cômodos da casa e cruzar contradições de horários e álibis dos outros participantes.",
+          objective: "Descubra as evidências nucleares e acuse o verdadeiro assassino na reunião de emergência.",
+        };
+      case "MEDIC":
+        return {
+          title: "O Legista / Médico",
+          subtitle: "AUTÓPSIAS E PERÍCIA BIOLÓGICA",
+          badge: "CORPO DE DELITO",
+          desc: "Você analisa laudos químicos e vestígios biológicos deixados nos cômodos. É capaz de estimar horários de morte quando um corpo for encontrado.",
+          objective: "Verifique o tempo dos crimes e elimine suspeitos com álibis incompatíveis.",
+        };
+      case "TECHNICIAN":
+        return {
+          title: "O Técnico de Sistemas",
+          subtitle: "MANUTENÇÃO E NEUTRALIZAÇÃO",
+          badge: "CONTROLE DE INFRAESTRUTURA",
+          desc: "Você tem facilidade para reparar circuitos e terminais. Suas tarefas de manutenção têm alta probabilidade de desativar armadilhas fatais antes das vítimas iniciarem.",
+          objective: "Restaure os sistemas da casa e proteja seus aliados neutralizando armadilhas.",
+        };
+      case "INFORMANT":
+        return {
+          title: "O Informante",
+          subtitle: "INTERCEPTAÇÃO DE SINAIS",
+          badge: "COMUNICAÇÃO RESERVADA",
+          desc: "Você intercepta pistas parciais de movimentos da residência e sabe quem estava em cômodos adjacentes nos momentos críticos.",
+          objective: "Negocie informações com cautela sem se expor como alvo prioritário.",
+        };
+      default:
+        return {
+          title: "Sobrevivente",
+          subtitle: "INVESTIGAÇÃO E SOBREVIVÊNCIA",
+          badge: "INVESTIGADOR DE CAMPO",
+          desc: "Você está preso nesta residência com um assassino oculto. Conclua tarefas de perícia nos cômodos para recuperar pistas, desconfie de missões suspeitas e vote com sabedoria.",
+          objective: "Colete evidências reais, sobreviva às armadilhas e vote no culpado correto.",
+        };
+    }
+  };
+
+  const details = getRoleDetails();
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 select-none">
-      <div className="w-full max-w-sm flex flex-col items-center text-center">
+    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 select-none">
+      <div className="w-full max-w-sm flex flex-col items-center">
         {!revealed ? (
-          /* Scanning Phase */
-          <div className="space-y-6 w-full animate-in fade-in zoom-in-95 duration-200">
-            <div className="space-y-2">
-              <span className="text-[10px] font-mono tracking-widest text-investigation uppercase font-bold block">
-                AUTENTICAÇÃO BIOMÉTRICA CONFIDENCIAL
-              </span>
-              <h2 className="text-xl font-bold font-display text-primary">
-                Identidade de {playerName}
+          /* HOLD TO REVEAL PRIVACY SHIELD */
+          <div className="w-full noir-card p-6 text-center space-y-6 border-[#4A3A32] shadow-2xl">
+            <div className="space-y-1.5">
+              <span className="stamp-confidential text-[10px]">DOCUMENTO CLASSIFICADO</span>
+              <h2 className="text-xl font-serif font-bold text-[#F2EDE4] pt-2">
+                Dossiê Individual de Papel
               </h2>
-              <p className="text-xs text-secondary leading-relaxed px-4">
-                Pressione e segure o leitor biométrico abaixo para decodificar o seu papel secreto na casa.
+              <p className="text-xs text-[#C2B7AA] leading-relaxed">
+                Certifique-se de que nenhum outro jogador esteja olhando para sua tela.
               </p>
             </div>
 
-            {/* Fingerprint Interactive Pad */}
-            <div className="flex flex-col items-center justify-center my-8">
-              <button
+            {/* Wax Seal Press and Hold Target */}
+            <div className="py-4 flex flex-col items-center space-y-3">
+              <div
                 onMouseDown={() => setHolding(true)}
                 onMouseUp={() => setHolding(false)}
                 onTouchStart={() => setHolding(true)}
                 onTouchEnd={() => setHolding(false)}
-                className={`relative w-28 h-28 rounded-full flex items-center justify-center border-2 transition-all duration-200 active:scale-95 ${
+                className={`w-28 h-28 rounded-full border-2 transition-all flex flex-col items-center justify-center cursor-pointer relative shadow-2xl ${
                   holding
-                    ? "border-investigation bg-investigation/10 shadow-hud-cyan"
-                    : "border-border bg-surface hover:border-investigation/60"
+                    ? "scale-95 border-[#9F3D3D] bg-[#2D1214]"
+                    : "border-[#B79A70] bg-[#1C1814] hover:bg-[#25201C]"
                 }`}
               >
-                <Fingerprint
-                  className={`w-14 h-14 transition-colors ${
-                    holding ? "text-investigation animate-pulse" : "text-muted"
-                  }`}
-                />
-
-                {/* Laser scan line while holding */}
-                {holding && (
-                  <div
-                    className="absolute inset-x-2 h-1 bg-investigation shadow-lg shadow-investigation rounded-full animate-bounce"
-                    style={{ top: `${progress}%` }}
-                  />
-                )}
-
-                {/* Circular Progress Ring */}
-                <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+                {/* SVG Progress Circle */}
+                <svg className="absolute inset-0 w-full h-full -rotate-90">
                   <circle
                     cx="56"
                     cy="56"
                     r="52"
                     fill="none"
-                    stroke="rgba(0, 240, 255, 0.2)"
-                    strokeWidth="3"
-                  />
-                  <circle
-                    cx="56"
-                    cy="56"
-                    r="52"
-                    fill="none"
-                    stroke="#00F0FF"
+                    stroke="#B79A70"
                     strokeWidth="4"
-                    strokeDasharray={326}
+                    strokeDasharray="326"
                     strokeDashoffset={326 - (326 * progress) / 100}
                     strokeLinecap="round"
-                    className="transition-all duration-100"
+                    className="transition-all duration-75"
                   />
                 </svg>
-              </button>
-              <span className="text-[10px] font-mono text-secondary mt-3 uppercase tracking-wider">
-                {holding ? `Escaneando... ${progress}%` : "Mantenha o polegar pressionado"}
+
+                {/* Wax Seal Stamp Icon */}
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#9F3D3D] to-[#4A1616] border border-[#F1A8A4]/30 flex items-center justify-center shadow-md">
+                  <Lock className="w-5 h-5 text-[#F2EDE4]" />
+                </div>
+                <span className="text-[10px] font-mono text-[#F2EDE4] mt-1 font-bold">
+                  {progress > 0 ? `${progress}%` : "SEGURE"}
+                </span>
+              </div>
+
+              <span className="text-[11px] font-mono text-[#C2B7AA]">
+                Pressione e segure o lacre para romper o sigilo
               </span>
             </div>
 
-            <div className="p-3 bg-surface-elevated/80 border border-border rounded-xl text-[11px] text-muted flex items-center justify-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-alert" />
-              <span>Proteja a tela contra a visão dos outros participantes.</span>
+            <div className="p-2.5 rounded-lg bg-[#0C0B0A] border border-[#4A3A32]/60 text-[10px] font-mono text-[#B79A70]">
+              DESTINATÁRIO: {playerName.toUpperCase()}
             </div>
           </div>
         ) : (
-          /* Role Revealed Card */
+          /* REVEALED DOSSIER CARD */
           <div
-            className={`w-full p-5 rounded-2xl border text-left space-y-4 animate-in zoom-in-90 fade-in duration-300 ${
-              isKiller ? "game-panel-danger" : "game-panel-cyan"
+            className={`w-full p-6 rounded-2xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 border ${
+              isKiller
+                ? "noir-panel-threat border-[#9F3D3D]"
+                : "noir-paper border-[#B09B7A]"
             }`}
           >
             {/* Header Stamp */}
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <span
-                className={`text-[10px] font-mono font-bold tracking-widest uppercase px-2 py-0.5 rounded ${
-                  isKiller
-                    ? "bg-danger/20 text-danger border border-danger/40"
-                    : "bg-investigation/20 text-investigation border border-investigation/40"
-                }`}
-              >
-                {isKiller ? "CLASSIFIED // ALVO PRIORITÁRIO" : "DOSSIÊ OFICIAL // PERÍCIA"}
-              </span>
-              <span className="text-[10px] font-mono text-muted">ID #{role.slice(0, 3)}</span>
-            </div>
-
-            {/* Role Header */}
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl border ${
-                  isKiller
-                    ? "bg-danger/20 border-danger/60 text-danger shadow-hud-crimson"
-                    : "bg-investigation/20 border-investigation/60 text-investigation shadow-hud-cyan"
-                }`}
-              >
-                {getRoleIcon(role)}
-              </div>
+            <div className="flex items-start justify-between border-b pb-2 border-current/20">
               <div>
-                <h3 className="text-xl font-bold font-display text-primary tracking-wide">
-                  {getRoleTitle(role)}
-                </h3>
-                <span className="text-xs font-mono text-secondary uppercase font-semibold">
-                  {isKiller ? "Facção Clandestina" : "Facção Sobrevivente"}
+                <span className={isKiller ? "stamp-confidential" : "stamp-order"}>
+                  {details.badge}
+                </span>
+                <span className="text-[10px] font-mono block mt-1 opacity-70">
+                  PARTICIPANTE: {playerName.toUpperCase()}
                 </span>
               </div>
+              {isKiller ? (
+                <Skull className="w-6 h-6 text-[#F1A8A4]" />
+              ) : (
+                <Shield className="w-6 h-6 text-[#30231C]" />
+              )}
             </div>
 
-            {/* Directive Instructions */}
-            <div className="p-3 bg-background/60 border border-border/80 rounded-xl space-y-1.5 text-xs">
-              <strong className="text-primary block font-mono text-[10px] uppercase tracking-wider">
-                Diretrizes de Campo:
-              </strong>
-              <p className="text-secondary leading-relaxed">
-                {getRoleDirectives(role)}
+            {/* Role Title */}
+            <div>
+              <h1
+                className={`font-serif font-bold text-2xl tracking-wide ${
+                  isKiller ? "text-[#F1A8A4]" : "text-[#30231C]"
+                }`}
+              >
+                {details.title}
+              </h1>
+              <p
+                className={`text-xs font-mono font-bold tracking-wider uppercase mt-0.5 ${
+                  isKiller ? "text-[#C2B7AA]" : "text-[#5A4335]"
+                }`}
+              >
+                {details.subtitle}
               </p>
             </div>
 
-            {/* Prohibitions */}
-            <div className="p-2.5 bg-surface-elevated/60 border border-border rounded-xl text-[11px] text-muted space-y-1">
-              <strong className="text-alert block text-[10px] uppercase font-mono">
-                Regra Inegociável:
-              </strong>
-              <p>{getRoleProhibitions(role)}</p>
-            </div>
-
-            <button
-              onClick={() => {
-                sound.playTap();
-                onDismiss();
-              }}
-              className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg ${
-                isKiller
-                  ? "tactile-btn-danger"
-                  : "tactile-btn-primary"
+            {/* Description */}
+            <p
+              className={`text-xs leading-relaxed font-sans ${
+                isKiller ? "text-[#F2EDE4]" : "text-[#30231C]"
               }`}
             >
-              <CheckCircle className="w-4 h-4" /> Entendido (Entrar na Partida)
+              {details.desc}
+            </p>
+
+            {/* Objective Box */}
+            <div
+              className={`p-3 rounded-xl border text-xs space-y-1 ${
+                isKiller
+                  ? "bg-[#1B0B0D] border-[#9F3D3D]/50 text-[#F2EDE4]"
+                  : "bg-[#C8B89C] border-[#B09B7A] text-[#30231C]"
+              }`}
+            >
+              <span className="font-mono font-bold uppercase tracking-wide block text-[10px]">
+                Seu Objetivo Principal:
+              </span>
+              <p className="font-serif italic leading-snug">{details.objective}</p>
+            </div>
+
+            {/* Confirmation CTA */}
+            <button
+              onClick={() => {
+                sound.playPaperRustle();
+                onDismiss();
+              }}
+              className={`w-full py-3.5 rounded-xl font-serif font-bold text-xs uppercase tracking-widest shadow-md flex items-center justify-center gap-2 ${
+                isKiller
+                  ? "noir-btn-danger"
+                  : "noir-btn-paper"
+              }`}
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Memorizei Meu Papel</span>
             </button>
           </div>
         )}
@@ -215,53 +262,3 @@ export const RoleRevealModal: React.FC<RoleRevealModalProps> = ({
     </div>
   );
 };
-
-function getRoleIcon(role: Role) {
-  switch (role) {
-    case "KILLER": return <Crosshair className="w-8 h-8 text-danger" />;
-    case "DETECTIVE": return <Search className="w-8 h-8 text-investigation" />;
-    case "MEDIC": return <HeartPulse className="w-8 h-8 text-protection" />;
-    case "TECHNICIAN": return <Wrench className="w-8 h-8 text-alert" />;
-    case "INFORMANT": return <Radio className="w-8 h-8 text-investigation" />;
-    default: return <Shield className="w-8 h-8 text-primary" />;
-  }
-}
-
-function getRoleTitle(role: Role): string {
-  switch (role) {
-    case "KILLER": return "O ASSASSINO";
-    case "DETECTIVE": return "O DETETIVE";
-    case "MEDIC": return "O MÉDICO";
-    case "TECHNICIAN": return "O TÉCNICO";
-    case "INFORMANT": return "O INFORMANTE";
-    default: return "CIVIL / INVESTIGADOR";
-  }
-}
-
-function getRoleDirectives(role: Role): string {
-  switch (role) {
-    case "KILLER":
-      return "Arme missões disfarçadas no seu painel secreto contra sobreviventes isolados. Se o alvo tocar em Iniciar missão, ele será eliminado virtualmente de forma instantânea.";
-    case "DETECTIVE":
-      return "Você possui perícia investigativa para encontrar contradições em depoimentos e correlacionar credenciais no dossiê. Busque pistas nas salas da casa.";
-    case "MEDIC":
-      return "Suas tarefas de proteção preventiva possuem a capacidade de neutralizar armadilhas clandestinas antes que a vítima as acione.";
-    case "TECHNICIAN":
-      return "Especialista em circuitos elétricos e sensores perimetrais. Restaure sistemas e audite diagramas para reabilitar o monitoramento da casa.";
-    case "INFORMANT":
-      return "Você recebe fragmentos de dados e mensagens de rádio interceptadas na varanda. Negocie pistas com outros participantes com cautela.";
-    default:
-      return "Cumpra suas missões forenses nos cômodos da casa, acumule evidências materiais no dossiê coletivo e desmascare o assassino na reunião.";
-  }
-}
-
-function getRoleProhibitions(role: Role): string {
-  switch (role) {
-    case "KILLER":
-      return "Você só pode manter 1 armadilha armada por vez e nunca pode matar fisicamente (100% virtual).";
-    case "DETECTIVE":
-      return "Você não recebe a identidade do assassino de graça; precisa prová-la com evidências.";
-    default:
-      return "Nunca toque fisicamente em outros participantes ou equipamentos elétricos reais.";
-  }
-}

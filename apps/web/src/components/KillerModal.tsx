@@ -5,13 +5,14 @@ import {
   Skull,
   Crosshair,
   AlertTriangle,
-  XCircle,
+  X,
   CheckCircle,
   Lock,
   Radio,
   Flame,
 } from "lucide-react";
 import { sound } from "../lib/audio";
+import { CharacterPortrait, ConfidentialStamp } from "./ui/NoirComponents";
 
 interface KillerModalProps {
   publicState: PublicGameState;
@@ -41,7 +42,7 @@ export const KillerModal: React.FC<KillerModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (hasActiveTrap) {
-      setErrorMsg("Você já possui uma armadilha ativa. Aguarde o acionamento ou neutralização.");
+      setErrorMsg("Você já possui uma armadilha ativa no servidor. Aguarde o acionamento ou neutralização.");
       return;
     }
     if (!targetId) {
@@ -49,7 +50,6 @@ export const KillerModal: React.FC<KillerModalProps> = ({
       return;
     }
 
-    sound.playTap();
     sound.playHeartbeat();
     onArmTrap(targetId, templateId, selectedRoom || undefined);
     onClose();
@@ -57,115 +57,125 @@ export const KillerModal: React.FC<KillerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="w-full max-w-md game-panel-danger p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md noir-panel-threat p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 border-[#9F3D3D] max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-danger/30">
-          <div className="flex items-center gap-2 text-danger">
-            <Skull className="w-5 h-5 animate-pulse" />
-            <h3 className="text-base font-bold font-display uppercase tracking-wider text-primary">
-              Console Clandestino
+        <div className="flex items-center justify-between pb-2 border-b border-[#9F3D3D]/40">
+          <div className="flex items-center gap-2">
+            <Skull className="w-5 h-5 text-[#F1A8A4]" />
+            <h3 className="text-base font-serif font-bold uppercase tracking-widest text-[#F2EDE4]">
+              Plano de Assassinato
             </h3>
           </div>
-          <button onClick={onClose} className="text-secondary hover:text-primary">
-            <XCircle className="w-5 h-5" />
+          <button onClick={onClose} className="text-[#C2B7AA] hover:text-[#F2EDE4] p-1">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Live Trap Slot: 1/1 Limit */}
-        <div className="p-3 bg-background/80 rounded-xl border border-danger/40 flex items-center justify-between text-xs font-mono">
-          <span className="text-secondary">SLOT DE ARMADILHA:</span>
+        <div className="p-3 bg-[#110B0D] rounded-xl border border-[#9F3D3D]/40 flex items-center justify-between text-xs font-mono">
+          <span className="text-[#C2B7AA]">SLOT DE ARMADILHA:</span>
           {hasActiveTrap ? (
-            <span className="text-danger font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-danger animate-ping" />
-              1/1 ARMADA
+            <span className="text-[#F1A8A4] font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#9F3D3D] animate-ping" />
+              1/1 EM ANDAMENTO
             </span>
           ) : (
-            <span className="text-protection font-bold flex items-center gap-1">
-              <CheckCircle className="w-3.5 h-3.5" /> 0/1 LIVRE PARA ARMAR
+            <span className="text-[#73917B] font-bold">
+              0/1 DISPONÍVEL
             </span>
           )}
         </div>
 
+        {/* Invariant Info Notice */}
+        <div className="p-3 bg-[#1A0C0E] border border-[#9F3D3D]/30 rounded-xl text-[11px] text-[#C2B7AA] space-y-1">
+          <strong className="text-[#F1A8A4] font-mono block text-[10px] uppercase">
+            Regra Crítica do Servidor:
+          </strong>
+          A vítima não morre ao abrir os detalhes. A eliminação virtual é disparada no exato momento em que ela toca em <strong>"Iniciar Ordem"</strong>. Um sobrevivente terceiro pode neutralizá-la antes.
+        </div>
+
         {errorMsg && (
-          <div className="p-3 bg-danger/20 border border-danger/40 text-danger rounded-xl text-xs flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{errorMsg}</span>
+          <div className="p-2.5 bg-[#4A1616] border border-[#F1A8A4] text-xs text-[#F2EDE4] rounded-lg">
+            {errorMsg}
           </div>
         )}
 
         {hasActiveTrap ? (
-          <div className="p-4 bg-background/60 border border-danger/40 rounded-xl space-y-2.5 text-xs">
-            <h4 className="font-bold text-danger uppercase font-mono flex items-center gap-1.5">
-              <Flame className="w-4 h-4" /> Armadilha Fatal em Execução
-            </h4>
-            <p className="text-secondary leading-relaxed font-sans">
-              A missão falsa foi entregue ao alvo. O visual é 100% idêntico a uma tarefa comum. Se o alvo tocar em <strong>"Iniciar missão"</strong> no cômodo exigido, morrerá no mesmo instante.
-            </p>
-            <div className="pt-2 text-[10px] font-mono text-muted border-t border-border/40">
-              ID DA OPERAÇÃO: {kd?.activeTrap?.id}
+          /* ACTIVE TRAP STATUS CARD */
+          <div className="p-4 bg-[#14080A] rounded-xl border border-[#9F3D3D] space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#F1A8A4] font-mono font-bold uppercase">
+                ARMADILHA ATIVA
+              </span>
+              <span className="text-[10px] font-mono text-[#C2B7AA]">
+                ALVO: {publicState.players.find((p) => p.id === kd?.activeTrap?.targetPlayerId)?.name || "Alvo"}
+              </span>
             </div>
+            <p className="text-xs text-[#F2EDE4] font-serif italic">
+              "Aguardando a vítima iniciar a tarefa disfarçada na tela dela..."
+            </p>
           </div>
         ) : (
+          /* ARM TRAP FORM */
           <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Step 1: Target Selection */}
             <div>
-              <label className="text-xs text-secondary font-bold font-mono block mb-1">
-                SELECIONE A VÍTIMA:
+              <label className="text-[10px] font-mono text-[#C2B7AA] uppercase font-bold tracking-wider block mb-2">
+                1. ESCOLHA SUA PRÓXIMA VÍTIMA:
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {livingSurvivors.map((survivor) => {
+                  const isSelected = survivor.id === targetId;
+                  return (
+                    <button
+                      type="button"
+                      key={survivor.id}
+                      onClick={() => setTargetId(survivor.id)}
+                      className={`p-2 rounded-xl border flex flex-col items-center text-center transition-all ${
+                        isSelected
+                          ? "bg-[#3D1418] border-[#F1A8A4] ring-2 ring-[#9F3D3D] shadow-noir-crimson"
+                          : "bg-[#1B0B0D] border-[#4A3A32] text-[#C2B7AA]"
+                      }`}
+                    >
+                      <CharacterPortrait name={survivor.name} status={survivor.status} size="sm" />
+                      <span className="text-[10px] font-serif font-bold text-[#F2EDE4] truncate max-w-full mt-1">
+                        {survivor.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Step 2: Disguise Mission Template */}
+            <div>
+              <label className="text-[10px] font-mono text-[#C2B7AA] uppercase font-bold tracking-wider block mb-1.5">
+                2. SELECIONE A MISSÃO DISFARÇADA (ISCA):
               </label>
               <select
-                value={targetId}
-                onChange={(e) => setTargetId(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-danger font-sans"
+                value={templateId}
+                onChange={(e) => setTemplateId(e.target.value)}
+                className="w-full bg-[#110B0D] border border-[#9F3D3D]/50 rounded-xl p-3 text-xs text-[#F2EDE4] outline-none font-sans"
               >
-                <option value="">Escolha um sobrevivente vivo...</option>
-                {livingSurvivors.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} (Cômodo: {p.currentRoomId})
+                {DISGUISE_TRAP_TEMPLATES.map((tmpl: MissionTemplate) => (
+                  <option key={tmpl.id} value={tmpl.id}>
+                    {tmpl.title} ({tmpl.category})
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Step 3: Required Room Constraint */}
             <div>
-              <label className="text-xs text-secondary font-bold font-mono block mb-1">
-                DISFARCE DA MISSÃO FALSA:
-              </label>
-              <div className="space-y-1.5">
-                {DISGUISE_TRAP_TEMPLATES.map((tmpl: MissionTemplate) => (
-                  <label
-                    key={tmpl.id}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition-all ${
-                      templateId === tmpl.id
-                        ? "bg-danger/20 border-danger text-primary"
-                        : "bg-background border-border text-secondary hover:border-danger/40"
-                    }`}
-                  >
-                    <div>
-                      <span className="font-bold block text-primary font-display">{tmpl.title}</span>
-                      <span className="text-[10px] text-muted">{tmpl.description}</span>
-                    </div>
-                    <input
-                      type="radio"
-                      name="template"
-                      value={tmpl.id}
-                      checked={templateId === tmpl.id}
-                      onChange={() => setTemplateId(tmpl.id)}
-                      className="accent-danger"
-                    />
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-secondary font-bold font-mono block mb-1">
-                EXIGÊNCIA DE AMBIENTE:
+              <label className="text-[10px] font-mono text-[#C2B7AA] uppercase font-bold tracking-wider block mb-1.5">
+                3. EXIGIR CÔMODO OBRIGATÓRIO (OPCIONAL):
               </label>
               <select
                 value={selectedRoom}
                 onChange={(e) => setSelectedRoom(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-primary outline-none focus:border-danger font-sans"
+                className="w-full bg-[#110B0D] border border-[#9F3D3D]/50 rounded-xl p-3 text-xs text-[#F2EDE4] outline-none font-sans"
               >
-                <option value="">Qualquer cômodo da casa</option>
+                <option value="">Qualquer cômodo da residência</option>
                 {publicState.rooms.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -176,9 +186,14 @@ export const KillerModal: React.FC<KillerModalProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3.5 tactile-btn-danger text-xs font-bold font-display uppercase tracking-wider active:scale-95 transition-all shadow-xl"
+              disabled={!targetId}
+              className={`w-full py-3.5 rounded-xl font-serif font-bold text-xs uppercase tracking-widest transition-all ${
+                targetId
+                  ? "noir-btn-danger"
+                  : "bg-[#251012] text-[#C2B7AA]/40 border border-[#4A1616] cursor-not-allowed"
+              }`}
             >
-              Armar Armadilha Fatal (1/1)
+              Armar Armadilha Fatal
             </button>
           </form>
         )}
