@@ -16,13 +16,13 @@ O projeto foi projetado com prioridade mobile-first e arquitetura web/PWA conect
 
 ### 2. Inicialização Rápida
 
-Na raiz do projeto (`C:\Users\gebel\.gemini\antigravity\scratch\alibi`):
+Na raiz do projeto:
 
 ```bash
 # 1. Instalar dependências de todos os pacotes
 pnpm install
 
-# 2. Executar a suíte de testes automatizados (19 testes de regras críticas)
+# 2. Executar a suíte de testes automatizados (27 testes de regras e minigames)
 pnpm test
 
 # 3. Executar o simulador de 8 jogadores simultâneos
@@ -38,22 +38,35 @@ pnpm dev
 
 ---
 
+## 🎮 Os 8 Minigames Forenses (Mobile-First, 5 a 15 segundos)
+
+1. **Reconectar Circuito (`circuit_reconnect`):** Conexão rápida de fios coloridos (Carmesim, Latão, Ardósia, Cobre) em caixa de fusíveis de época.
+2. **Analisar Digital (`fingerprint_match`):** Alinhamento tátil de 3 fatias de impressão digital sob lente pericial.
+3. **Abrir Arquivo (`archive_lock`):** Giro de disco mecânico de segredo até a posição indicada na evidência.
+4. **Restaurar Energia (`timing_power`):** Acionamento do galvanômetro no instante de tolerância com um toque.
+5. **Recuperar Documento (`doc_reconstruct`):** Recomposição de 3 a 4 fragmentos de relatório confidencial rasgado.
+6. **Decifrar Código (`cipher_breaker`):** Inserção de senha curta em teclado mecânico obtida em telegrama pericial.
+7. **Interceptar Sinal (`signal_memory`):** Repetição de sequência de 3 a 4 pulsos luminosos de telégrafo.
+8. **Analisar Evidência (`evidence_analysis`):** Identificação de discrepâncias e adulterações entre fotografias da cena.
+
+---
+
 ## 🏛️ Estrutura do Monorepo
 
 ```
-alibi/
+dissimulo/
 ├── apps/
-│   ├── web/             # Frontend React 18 + Vite + Tailwind CSS (Forensic Noir UI)
+│   ├── web/             # Frontend React 18 + Vite + Tailwind CSS (Identidade Noir Criminal)
 │   ├── game-server/     # Servidor multiplayer com WebSockets, lock atômico e CAS
 │   └── mobile/          # Estrutura nativa Capacitor Android & iOS com iBeacon BLE
 ├── packages/
 │   ├── contracts/       # Schemas Zod, tipos TypeScript, DTOs e mensagens tipadas
 │   ├── game-engine/     # Regras puras, máquina de estados, agendador atômico de armadilhas
-│   ├── minigames/       # 12 minigames interativos com validação algorítmica
+│   ├── minigames/       # 8 minigames interativos com validação algorítmica e retrocompatibilidade
 │   ├── location/        # Provedores de cômodo: ManualRoomProvider, BeaconRoomProvider, DevSimulator
 │   └── evidence-engine/ # Grafo investigativo, cruzamento pericial e detecção de contradições
-├── tests/               # Suíte Vitest (19 testes de invariantes e minigames)
-└── docs/                # Documentação técnica completa
+├── tests/               # Suíte Vitest (27 testes de invariantes e minigames)
+└── docs/                # Documentação técnica e design system Noir Criminal
 ```
 
 ---
