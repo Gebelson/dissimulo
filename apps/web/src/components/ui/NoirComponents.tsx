@@ -63,8 +63,9 @@ export const CharacterPortrait: React.FC<{
   const isLg = size === "lg";
   const isSm = size === "sm";
 
-  // Generate consistent initial/seed from name
-  const initial = name.trim().charAt(0).toUpperCase();
+  // Generate consistent initial/seed from safe name
+  const safeName = (name || "Investigador").trim();
+  const initial = safeName.charAt(0).toUpperCase() || "?";
 
   return (
     <div
@@ -124,7 +125,7 @@ export const CharacterPortrait: React.FC<{
           isSm ? "text-[10px]" : "text-xs"
         } ${isDead ? "text-[#C2B7AA]/50 line-through" : "text-[#F2EDE4]"}`}
       >
-        {name}
+        {safeName}
       </span>
 
       {isReady !== undefined && (

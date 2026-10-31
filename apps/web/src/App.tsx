@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   PublicGameState,
   PlayerPrivateView,
@@ -30,7 +30,45 @@ import {
   Settings,
   Volume2,
   VolumeX,
+  ShieldAlert,
+  RotateCcw,
+  ArrowLeft,
 } from "lucide-react";
+
+// Helper to construct robust WebSocket URL across dev, local Wi-Fi, Android/iOS and production
+function buildWebSocketUrl(roomCode: string, playerId: string, playerName: string): string {
+  const envUrl = (import.meta as any).env?.VITE_WS_URL;
+  if (envUrl) {
+    const sep = envUrl.includes("?") ? "&" : "?";
+    return `${envUrl}${sep}roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
+  }
+
+  const customServer = typeof window !== "undefined" ? localStorage.getItem("dissimulo_server_url") : null;
+  if (customServer) {
+    const isSecure = customServer.startsWith("https://") || customServer.startsWith("wss://");
+    const cleanHost = customServer.replace(/^(http|ws)s?:\/\//, "").replace(/\/+$/, "");
+    const proto = isSecure ? "wss:" : "ws:";
+    return `${proto}//${cleanHost}?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
+  }
+
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+  const protocol = isHttps ? "wss:" : "ws:";
+  const hostname = typeof window !== "undefined" ? (window.location.hostname || "localhost") : "localhost";
+
+  // When developing on port 3000 (Vite), backend game server is on port 4000
+  let port = "4000";
+  if (typeof window !== "undefined") {
+    const currentPort = window.location.port;
+    if (!currentPort && isHttps) {
+      // Production HTTPS behind reverse proxy on port 443
+      return `${protocol}//${window.location.host}/ws?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
+    }
+  }
+
+  return `${protocol}//${hostname}:${port}?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
+}
+
+type ConnectionState = "IDLE" | "CONNECTING" | "CONNECTED" | "ERROR";
 
 export function App() {
   const [roomCode, setRoomCode] = useState(() => {
@@ -39,7 +77,7 @@ export function App() {
   const [playerName, setPlayerName] = useState(() => {
     return localStorage.getItem("dissimulo_name") || localStorage.getItem("alibi_name") || "Investigador";
   });
-  const [playerId] = useState(() => {
+  const [playerId, setPlayerId] = useState(() => {
     let id = sessionStorage.getItem("dissimulo_player_id") || sessionStorage.getItem("alibi_player_id");
     if (!id) {
       id = `p_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -48,8 +86,10 @@ export function App() {
     return id;
   });
 
-  const [connected, setConnected] = useState(false);
   const [joined, setJoined] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionState>("IDLE");
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [retryTrigger, setRetryTrigger] = useState(0);
 
   const [publicState, setPublicState] = useState<PublicGameState | null>(null);
   const [privateState, setPrivateState] = useState<PlayerPrivateView | null>(null);
@@ -69,35 +109,100 @@ export function App() {
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const socketRef = useRef<WebSocket | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Connect WebSocket
+  // Reset to welcome screen cleanly
+  const handleBackToWelcome = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setJoined(false);
+    setConnectionStatus("IDLE");
+    setConnectionError(null);
+    setPublicState(null);
+    setPrivateState(null);
+  }, []);
+
+  // Retry connection
+  const handleRetry = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setConnectionStatus("CONNECTING");
+    setConnectionError(null);
+    setPublicState(null);
+    setPrivateState(null);
+    setRetryTrigger((prev) => prev + 1);
+  }, []);
+
+  // Connect WebSocket when joined is true
   useEffect(() => {
-    if (!joined) return;
+    if (!joined) {
+      setConnectionStatus("IDLE");
+      return;
+    }
 
-    const host = window.location.hostname || "localhost";
-    const port = 4000;
-    const wsUrl = `ws://${host}:${port}?roomCode=${roomCode}&playerId=${playerId}&name=${encodeURIComponent(
-      playerName
-    )}&avatar=avatar_1`;
+    setConnectionStatus("CONNECTING");
+    setConnectionError(null);
 
-    const ws = new WebSocket(wsUrl);
-    socketRef.current = ws;
+    const wsUrl = buildWebSocketUrl(roomCode, playerId, playerName);
+    let ws: WebSocket;
+
+    try {
+      ws = new WebSocket(wsUrl);
+      socketRef.current = ws;
+    } catch (err: any) {
+      setConnectionStatus("ERROR");
+      setConnectionError("Erro de segurança ou endereço inválido ao tentar conectar ao servidor da mansão.");
+      return;
+    }
+
+    // Set connection timeout (8 seconds) to prevent infinite loading
+    timeoutRef.current = setTimeout(() => {
+      if (!publicState || !privateState) {
+        setConnectionStatus("ERROR");
+        setConnectionError("Tempo de conexão esgotado. O servidor multiplayer da mansão não respondeu.");
+        try {
+          ws.close();
+        } catch {}
+      }
+    }, 8000);
 
     ws.onopen = () => {
-      setConnected(true);
+      // Socket is open, awaiting SYNC_STATE from server
     };
 
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+
         if (msg.type === "SYNC_STATE") {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
           setPublicState(msg.public);
           setPrivateState(msg.private);
+          setConnectionStatus("CONNECTED");
+          setConnectionError(null);
 
           // If victim received instant death notification
-          if (msg.private.status === "DEAD_UNDISCOVERED") {
+          if (msg.private?.status === "DEAD_UNDISCOVERED") {
             setShowDeathModal(true);
           }
+        } else if (msg.type === "ERROR") {
+          setConnectionStatus("ERROR");
+          setConnectionError(msg.message || "Erro retornado pela central de investigação.");
         } else if (msg.type === "DEATH_SCREEN") {
           sound.playEliminationSound();
           setShowDeathModal(true);
@@ -111,14 +216,35 @@ export function App() {
       }
     };
 
+    ws.onerror = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      setConnectionStatus("ERROR");
+      setConnectionError("Não foi possível alcançar o servidor do caso. Verifique se a aplicação backend está ativa na porta 4000.");
+    };
+
     ws.onclose = () => {
-      setConnected(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      // If we hadn't connected yet, treat as an initial connection failure
+      if (connectionStatus === "CONNECTING") {
+        setConnectionStatus("ERROR");
+        setConnectionError("A conexão com a mansão foi encerrada antes da sincronização do caso.");
+      }
     };
 
     return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       ws.close();
     };
-  }, [joined, roomCode, playerId, playerName]);
+  }, [joined, roomCode, playerId, playerName, retryTrigger]);
 
   // Dispatch Action
   const sendAction = (action: ClientAction) => {
@@ -151,20 +277,90 @@ export function App() {
     );
   }
 
-  // 2. CONNECTING STATE
-  if (!publicState || !privateState) {
+  // 2. ERROR STATE (NEVER SHOW AN EMPTY BLACK SCREEN)
+  if (connectionStatus === "ERROR") {
     return (
-      <div className="min-h-screen bg-[#0C0B0A] flex flex-col items-center justify-center p-4 text-center space-y-4 select-none">
-        <DissimuloLogo size="md" subtitle={false} />
-        <div className="w-10 h-10 border-2 border-[#B79A70] border-t-transparent rounded-full animate-spin shadow-noir-brass" />
-        <span className="text-xs font-mono text-[#C2B7AA] tracking-widest uppercase">
-          ESTABELECENDO CANAL SEGURO COM A MANSÃO...
+      <div className="min-h-screen bg-[#0C0B0A] flex flex-col items-center justify-center p-6 text-center select-none max-w-sm mx-auto animate-fade-in-dramatic">
+        <DissimuloLogo size="sm" subtitle={false} />
+
+        <div className="my-6 p-6 rounded-2xl bg-[#171411] border-2 border-[#9F3D3D] shadow-noir-crimson space-y-4 w-full">
+          <div className="w-12 h-12 rounded-full bg-[#2A1114] border border-[#9F3D3D] flex items-center justify-center text-[#F1A8A4] mx-auto shadow-md">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <span className="stamp-confidential text-[9px]">COMUNICADO DE FALHA</span>
+            <h2 className="text-base font-serif font-bold text-[#F2EDE4] leading-snug">
+              FALHA NA CONEXÃO COM A MANSÃO
+            </h2>
+            <p className="text-xs font-sans text-[#C2B7AA] leading-relaxed">
+              {connectionError || "O servidor da partida não está acessível no momento. Verifique sua conexão e tente novamente."}
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={handleRetry}
+              className="w-full py-3.5 noir-btn-primary rounded-xl font-serif font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
+            >
+              <RotateCcw className="w-4 h-4 text-[#F1A8A4]" />
+              <span>Tentar Novamente</span>
+            </button>
+
+            <button
+              onClick={handleBackToWelcome}
+              className="w-full py-3 noir-btn-secondary rounded-xl font-serif font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#B79A70]" />
+              <span>Voltar ao Início</span>
+            </button>
+          </div>
+        </div>
+
+        <span className="text-[10px] font-mono text-[#8C8074] uppercase tracking-widest">
+          SALA: {roomCode} // PROTOCOLO DE RECUPERAÇÃO
         </span>
       </div>
     );
   }
 
-  // 3. LOBBY PHASE
+  // 3. CONNECTING STATE (STYLIZED NOIR CRIMINAL LOADING SCREEN)
+  if (connectionStatus === "CONNECTING" || !publicState || !privateState) {
+    return (
+      <div className="min-h-screen bg-[#0C0B0A] flex flex-col items-center justify-center p-6 text-center space-y-6 select-none max-w-sm mx-auto animate-fade-in-dramatic">
+        <DissimuloLogo size="md" subtitle={false} />
+
+        <div className="w-12 h-12 border-2 border-[#B79A70] border-t-transparent rounded-full animate-spin shadow-noir-brass" />
+
+        <div className="space-y-1.5">
+          <span className="stamp-confidential text-[9px]">SESSÃO EM ANDAMENTO</span>
+          <h2 className="text-xl font-serif font-bold text-[#F2EDE4] tracking-widest uppercase">
+            CONECTANDO AO CASO
+          </h2>
+          <p className="text-xs font-serif italic text-[#C2B7AA]">
+            "Preparando sua investigação..."
+          </p>
+        </div>
+
+        <div className="p-3 bg-[#171411] rounded-xl border border-[#4A3A32] text-[11px] font-mono text-[#8C8074] w-full">
+          <span>CASO: </span>
+          <strong className="text-[#B79A70] font-bold">{roomCode}</strong>
+          <span className="mx-2">•</span>
+          <span>INVESTIGADOR: </span>
+          <strong className="text-[#F2EDE4] font-medium">{playerName}</strong>
+        </div>
+
+        <button
+          onClick={handleBackToWelcome}
+          className="text-xs font-mono text-[#C2B7AA] hover:text-[#F2EDE4] underline opacity-80 pt-2"
+        >
+          Cancelar e voltar
+        </button>
+      </div>
+    );
+  }
+
+  // 4. LOBBY PHASE
   if (publicState.phase === "LOBBY") {
     return (
       <>
@@ -180,7 +376,7 @@ export function App() {
     );
   }
 
-  // 4. RESULTS PHASE
+  // 5. RESULTS PHASE
   if (publicState.phase === "RESULTS") {
     return (
       <ResultsScreen
@@ -191,7 +387,7 @@ export function App() {
     );
   }
 
-  const me = publicState.players.find((p) => p.id === privateState.playerId);
+  const me = (publicState.players || []).find((p) => p.id === privateState.playerId);
   const isHost = me?.isHost || false;
 
   return (
@@ -209,6 +405,7 @@ export function App() {
           <button
             onClick={toggleSound}
             className="p-2 text-[#C2B7AA] hover:text-[#F2EDE4] rounded-xl active:scale-95 bg-[#221D19] border border-[#4A3A32]"
+            title="Alternar Áudio"
           >
             {soundEnabled ? <Volume2 className="w-4 h-4 text-[#B79A70]" /> : <VolumeX className="w-4 h-4 text-[#9F3D3D]" />}
           </button>
@@ -220,6 +417,7 @@ export function App() {
                 setShowHostPanel(true);
               }}
               className="p-2 text-[#C2B7AA] hover:text-[#B79A70] rounded-xl active:scale-95 bg-[#221D19] border border-[#4A3A32]"
+              title="Painel do Anfitrião"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -309,7 +507,7 @@ export function App() {
           >
             <FileCheck2 className="w-5 h-5" />
             <span className="text-[10px] font-mono tracking-wider">Missões</span>
-            {privateState.missions.filter((m) => m.status === "AVAILABLE").length > 0 && (
+            {(privateState.missions || []).filter((m) => m.status === "AVAILABLE").length > 0 && (
               <span className="absolute top-2 right-6 w-2 h-2 rounded-full bg-[#9F3D3D] animate-pulse" />
             )}
           </button>
