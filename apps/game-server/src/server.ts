@@ -4,6 +4,7 @@ import { GameState } from "@alibi/game-engine";
 import { ClientAction } from "@alibi/contracts";
 
 const PORT = Number(process.env.PORT) || 4000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 export class DissimuloServer {
   private server: http.Server;
@@ -11,16 +12,17 @@ export class DissimuloServer {
   private rooms: Map<string, GameState> = new Map();
   // Map of client sockets: playerId -> WebSocket
   private clientSockets: Map<string, WebSocket> = new Map();
-  // Map of socket to roomCode and playerId
-  private socketMetadata: Map<WebSocket, { roomCode: string; playerId: string }> = new Map();
+  // Map of socket to metadata
+  private socketMetadata: Map<WebSocket, { roomCode: string; playerId: string; isAlive: boolean }> = new Map();
   private tickerInterval?: NodeJS.Timeout;
+  private heartbeatInterval?: NodeJS.Timeout;
 
   constructor() {
     this.server = http.createServer((req, res) => {
-      // CORS headers
+      // Robust CORS headers
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
 
       if (req.method === "OPTIONS") {
         res.writeHead(204);
@@ -28,14 +30,53 @@ export class DissimuloServer {
         return;
       }
 
-      const url = new URL(req.url || "", `http://${req.headers.host}`);
+      const host = req.headers.host || `localhost:${PORT}`;
+      let url: URL;
+      try {
+        url = new URL(req.url || "/", `http://${host}`);
+      } catch {
+        url = new URL("http://localhost/");
+      }
 
-      if (url.pathname === "/health") {
+      // Root informational endpoint
+      if (url.pathname === "/" || url.pathname === "") {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ status: "healthy", activeRooms: this.rooms.size, timestamp: Date.now() }));
+        res.end(
+          JSON.stringify({
+            name: "Dissimulo Multiplayer Game Server",
+            status: "online",
+            version: "1.0.0",
+            port: PORT,
+            host: HOST,
+            activeRooms: this.rooms.size,
+            connectedClients: this.clientSockets.size,
+            endpoints: {
+              health: "/health",
+              rooms: "/api/rooms",
+              ws: "/?roomCode=CASA8&playerId=...&name=...",
+              wsProxy: "/ws?roomCode=CASA8&playerId=...&name=...",
+            },
+            timestamp: Date.now(),
+          })
+        );
         return;
       }
 
+      // Health check endpoint
+      if (url.pathname === "/health") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            status: "healthy",
+            activeRooms: this.rooms.size,
+            connectedClients: this.clientSockets.size,
+            timestamp: Date.now(),
+          })
+        );
+        return;
+      }
+
+      // Active rooms list endpoint
       if (url.pathname === "/api/rooms" && req.method === "GET") {
         const list = Array.from(this.rooms.values()).map((r) => ({
           roomCode: r.roomCode,
@@ -48,12 +89,13 @@ export class DissimuloServer {
       }
 
       res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Not found" }));
+      res.end(JSON.stringify({ error: "Endpoint not found" }));
     });
 
     this.wss = new WebSocketServer({ server: this.server });
     this.setupWebSocket();
     this.startTicker();
+    this.startHeartbeat();
   }
 
   public getOrCreateRoom(roomCode: string): GameState {
@@ -68,28 +110,51 @@ export class DissimuloServer {
 
   private setupWebSocket() {
     this.wss.on("connection", (ws, req) => {
-      const url = new URL(req.url || "", `http://${req.headers.host}`);
-      const roomCode = (url.searchParams.get("roomCode") || "CASA8").toUpperCase();
+      const host = req.headers.host || `localhost:${PORT}`;
+      let url: URL;
+      try {
+        url = new URL(req.url || "/", `http://${host}`);
+      } catch {
+        url = new URL("http://localhost/");
+      }
+
+      const roomCode = (url.searchParams.get("roomCode") || "CASA8").toUpperCase().trim();
       const playerId = url.searchParams.get("playerId") || `player_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const name = url.searchParams.get("name") || "Investigador";
       const avatar = url.searchParams.get("avatar") || "avatar_1";
 
       const room = this.getOrCreateRoom(roomCode);
-      this.socketMetadata.set(ws, { roomCode, playerId });
+      this.socketMetadata.set(ws, { roomCode, playerId, isAlive: true });
       this.clientSockets.set(playerId, ws);
 
-      // Add player if not present (reconnection support)
+      // Handle pong keepalive response
+      ws.on("pong", () => {
+        const meta = this.socketMetadata.get(ws);
+        if (meta) meta.isAlive = true;
+      });
+
+      // Add player if not present (supports reconnection)
       if (!room.players.has(playerId)) {
         room.addPlayer(playerId, name, avatar);
       }
 
-      // Send initial state
+      // Send initial state sync to this client immediately
       this.syncRoom(roomCode);
 
       ws.on("message", async (data) => {
         try {
-          const action = JSON.parse(data.toString()) as ClientAction;
-          await this.handleClientAction(roomCode, playerId, action, ws);
+          const raw = data.toString();
+          const action = JSON.parse(raw) as ClientAction | { type: "PING"; timestamp?: number };
+
+          // Client-level ping for latency measurement
+          if ((action as any).type === "PING") {
+            const meta = this.socketMetadata.get(ws);
+            if (meta) meta.isAlive = true;
+            ws.send(JSON.stringify({ type: "PONG", clientTimestamp: (action as any).timestamp, serverTimestamp: Date.now() }));
+            return;
+          }
+
+          await this.handleClientAction(roomCode, playerId, action as ClientAction, ws);
         } catch (err: any) {
           ws.send(JSON.stringify({ type: "ERROR", message: err.message || "Erro ao processar ação." }));
         }
@@ -98,9 +163,34 @@ export class DissimuloServer {
       ws.on("close", () => {
         this.socketMetadata.delete(ws);
         this.clientSockets.delete(playerId);
-        // Do not remove player from match to support reconnection!
+        // Do not remove player from room to support seamless reconnection
+      });
+
+      ws.on("error", (err) => {
+        console.error(`[WS ERROR] Player ${playerId} in ${roomCode}:`, err.message);
       });
     });
+  }
+
+  private startHeartbeat() {
+    this.heartbeatInterval = setInterval(() => {
+      this.wss.clients.forEach((ws) => {
+        const meta = this.socketMetadata.get(ws);
+        if (!meta) {
+          ws.terminate();
+          return;
+        }
+
+        if (meta.isAlive === false) {
+          this.socketMetadata.delete(ws);
+          this.clientSockets.delete(meta.playerId);
+          return ws.terminate();
+        }
+
+        meta.isAlive = false;
+        ws.ping();
+      });
+    }, 30000);
   }
 
   private async handleClientAction(roomCode: string, playerId: string, action: ClientAction, ws: WebSocket) {
@@ -190,7 +280,6 @@ export class DissimuloServer {
         break;
 
       case "HOST_PAUSE":
-        // host diagnostics
         this.syncRoom(roomCode);
         break;
 
@@ -255,10 +344,10 @@ export class DissimuloServer {
     }, 1000);
   }
 
-  public listen(port = PORT): Promise<void> {
+  public listen(port = PORT, host = HOST): Promise<void> {
     return new Promise((resolve) => {
-      this.server.listen(port, () => {
-        console.log(`[DISSIMULO SERVER] Listening on http://localhost:${port}`);
+      this.server.listen(port, host, () => {
+        console.log(`[DISSIMULO SERVER] Listening on http://${host}:${port} (Bound to all network interfaces)`);
         resolve();
       });
     });
@@ -266,6 +355,7 @@ export class DissimuloServer {
 
   public close(): Promise<void> {
     if (this.tickerInterval) clearInterval(this.tickerInterval);
+    if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     return new Promise((resolve) => {
       this.wss.close(() => {
         this.server.close(() => resolve());

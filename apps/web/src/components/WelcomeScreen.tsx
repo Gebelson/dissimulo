@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { DissimuloLogo } from "./ui/DissimuloLogo";
 import { sound } from "../lib/audio";
-import { KeyRound, User, HelpCircle, ShieldAlert, ArrowRight, Sparkles } from "lucide-react";
+import { KeyRound, User, HelpCircle, ArrowRight, Sparkles, Server } from "lucide-react";
+import { resolveServerConfig } from "../services/connection";
 
 interface WelcomeScreenProps {
   initialRoomCode: string;
   initialPlayerName: string;
   onJoin: (roomCode: string, playerName: string) => void;
   onOpenRules: () => void;
+  onOpenServerConfig?: () => void;
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
@@ -15,10 +17,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   initialPlayerName,
   onJoin,
   onOpenRules,
+  onOpenServerConfig,
 }) => {
   const [roomCode, setRoomCode] = useState(initialRoomCode);
   const [playerName, setPlayerName] = useState(initialPlayerName);
   const [mode, setMode] = useState<"SELECT" | "JOIN" | "CREATE">("SELECT");
+  const serverConfig = resolveServerConfig();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +64,22 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0C0B0A]/80 to-[#0C0B0A]" />
       </div>
 
-      {/* Top Bar with Rules/Help */}
-      <div className="w-full flex justify-end z-10 pt-2">
+      {/* Top Bar with Server Config & Rules */}
+      <div className="w-full flex justify-between items-center z-10 pt-2">
+        <button
+          onClick={() => {
+            sound.playTap();
+            if (onOpenServerConfig) onOpenServerConfig();
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1C1814] border border-[#4A3A32] text-xs text-[#C2B7AA] hover:text-[#B79A70] active:scale-95 transition-all shadow-sm"
+          title="Configurar Conexão do Servidor"
+        >
+          <Server className="w-3.5 h-3.5 text-[#B79A70]" />
+          <span className="font-mono text-[11px] truncate max-w-[120px]">
+            {serverConfig.customUrl ? "Servidor Custom" : "Servidor"}
+          </span>
+        </button>
+
         <button
           onClick={() => {
             sound.playTap();
@@ -189,9 +207,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       </div>
 
       {/* Footer Metadata */}
-      <div className="z-10 py-2 text-center">
-        <span className="text-[10px] font-mono text-[#C2B7AA]/60 tracking-widest uppercase">
+      <div className="z-10 py-2 text-center space-y-1">
+        <span className="text-[10px] font-mono text-[#C2B7AA]/60 tracking-widest uppercase block">
           REQUISITO: 8 JOGADORES NA MESMA RESIDÊNCIA
+        </span>
+        <span className="text-[9px] font-mono text-[#8C8074] opacity-80 block truncate max-w-xs mx-auto">
+          Servidor: {serverConfig.resolvedWsUrl}
         </span>
       </div>
     </div>

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: dissimulo-game-server
+    env: docker
+    dockerfilePath: apps/game-server/Dockerfile
+    plan: free
+    region: ohio
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: HOST
+        value: 0.0.0.0

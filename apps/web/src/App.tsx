@@ -22,6 +22,11 @@ import { DeathModal } from "./components/DeathModal";
 import { MeetingModal } from "./components/MeetingModal";
 import { HostPanelModal } from "./components/HostPanelModal";
 import { RulesModal } from "./components/RulesModal";
+import { ServerConfigModal } from "./components/ui/ServerConfigModal";
+import {
+  buildWebSocketUrl,
+  resolveServerConfig,
+} from "./services/connection";
 import {
   Home,
   FileCheck2,
@@ -33,40 +38,8 @@ import {
   ShieldAlert,
   RotateCcw,
   ArrowLeft,
+  Server,
 } from "lucide-react";
-
-// Helper to construct robust WebSocket URL across dev, local Wi-Fi, Android/iOS and production
-function buildWebSocketUrl(roomCode: string, playerId: string, playerName: string): string {
-  const envUrl = (import.meta as any).env?.VITE_WS_URL;
-  if (envUrl) {
-    const sep = envUrl.includes("?") ? "&" : "?";
-    return `${envUrl}${sep}roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
-  }
-
-  const customServer = typeof window !== "undefined" ? localStorage.getItem("dissimulo_server_url") : null;
-  if (customServer) {
-    const isSecure = customServer.startsWith("https://") || customServer.startsWith("wss://");
-    const cleanHost = customServer.replace(/^(http|ws)s?:\/\//, "").replace(/\/+$/, "");
-    const proto = isSecure ? "wss:" : "ws:";
-    return `${proto}//${cleanHost}?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
-  }
-
-  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
-  const protocol = isHttps ? "wss:" : "ws:";
-  const hostname = typeof window !== "undefined" ? (window.location.hostname || "localhost") : "localhost";
-
-  // When developing on port 3000 (Vite), backend game server is on port 4000
-  let port = "4000";
-  if (typeof window !== "undefined") {
-    const currentPort = window.location.port;
-    if (!currentPort && isHttps) {
-      // Production HTTPS behind reverse proxy on port 443
-      return `${protocol}//${window.location.host}/ws?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
-    }
-  }
-
-  return `${protocol}//${hostname}:${port}?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(playerId)}&name=${encodeURIComponent(playerName)}&avatar=avatar_1`;
-}
 
 type ConnectionState = "IDLE" | "CONNECTING" | "CONNECTED" | "ERROR";
 
@@ -106,10 +79,12 @@ export function App() {
   const [showRules, setShowRules] = useState(false);
   const [showRoleReveal, setShowRoleReveal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showServerConfig, setShowServerConfig] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const socketRef = useRef<WebSocket | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset to welcome screen cleanly
   const handleBackToWelcome = useCallback(() => {
@@ -120,6 +95,10 @@ export function App() {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
     }
     setJoined(false);
     setConnectionStatus("IDLE");
@@ -138,6 +117,10 @@ export function App() {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
     setConnectionStatus("CONNECTING");
     setConnectionError(null);
     setPublicState(null);
@@ -155,6 +138,16 @@ export function App() {
     setConnectionStatus("CONNECTING");
     setConnectionError(null);
 
+    const cfg = resolveServerConfig();
+
+    if (cfg.isProductionWithoutBackend) {
+      setConnectionStatus("ERROR");
+      setConnectionError(
+        "Ambiente de produção (Vercel) detectado sem backend multiplayer configurado. O Vercel hospeda a interface estática, mas WebSockets requerem um servidor dedicado (Render, Railway, Fly.io ou IP da sua máquina). Clique em 'Configurar Servidor' abaixo para definir o endereço."
+      );
+      return;
+    }
+
     const wsUrl = buildWebSocketUrl(roomCode, playerId, playerName);
     let ws: WebSocket;
 
@@ -163,7 +156,7 @@ export function App() {
       socketRef.current = ws;
     } catch (err: any) {
       setConnectionStatus("ERROR");
-      setConnectionError("Erro de segurança ou endereço inválido ao tentar conectar ao servidor da mansão.");
+      setConnectionError(`Erro de sintaxe ou segurança ao conectar a ${wsUrl}: ${err.message || "URL inválida"}`);
       return;
     }
 
@@ -171,7 +164,7 @@ export function App() {
     timeoutRef.current = setTimeout(() => {
       if (!publicState || !privateState) {
         setConnectionStatus("ERROR");
-        setConnectionError("Tempo de conexão esgotado. O servidor multiplayer da mansão não respondeu.");
+        setConnectionError(`Tempo de conexão esgotado ao tentar alcançar ${cfg.resolvedWsUrl}. Verifique se o servidor do caso está ativo.`);
         try {
           ws.close();
         } catch {}
@@ -179,7 +172,14 @@ export function App() {
     }, 8000);
 
     ws.onopen = () => {
-      // Socket is open, awaiting SYNC_STATE from server
+      // Start ping heartbeat every 20s to keep connection alive across mobile NAT/Wi-Fi
+      pingIntervalRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          try {
+            ws.send(JSON.stringify({ type: "PING", timestamp: Date.now() }));
+          } catch {}
+        }
+      }, 20000);
     };
 
     ws.onmessage = (event) => {
@@ -200,6 +200,8 @@ export function App() {
           if (msg.private?.status === "DEAD_UNDISCOVERED") {
             setShowDeathModal(true);
           }
+        } else if (msg.type === "PONG") {
+          // Pong received, latency tracking can be used if needed
         } else if (msg.type === "ERROR") {
           setConnectionStatus("ERROR");
           setConnectionError(msg.message || "Erro retornado pela central de investigação.");
@@ -212,7 +214,7 @@ export function App() {
           sound.playEvidenceChime();
         }
       } catch (err) {
-        console.error("WS Parse Error:", err);
+        console.error("[Dissimulo WS Parse Error]:", err);
       }
     };
 
@@ -222,7 +224,13 @@ export function App() {
         timeoutRef.current = null;
       }
       setConnectionStatus("ERROR");
-      setConnectionError("Não foi possível alcançar o servidor do caso. Verifique se a aplicação backend está ativa na porta 4000.");
+      if (cfg.isProductionWithoutBackend) {
+        setConnectionError("Ambiente de produção (Vercel) detectado sem backend multiplayer configurado. Configure a URL do backend nas opções abaixo.");
+      } else {
+        setConnectionError(
+          `Não foi possível alcançar o servidor do caso em ${cfg.resolvedWsUrl}. Verifique se o servidor backend está em execução na porta 4000 ou configure o IP correto do anfitrião.`
+        );
+      }
     };
 
     ws.onclose = () => {
@@ -230,10 +238,14 @@ export function App() {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      // If we hadn't connected yet, treat as an initial connection failure
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      // If we hadn't received sync yet, treat as an initial connection failure
       if (connectionStatus === "CONNECTING") {
         setConnectionStatus("ERROR");
-        setConnectionError("A conexão com a mansão foi encerrada antes da sincronização do caso.");
+        setConnectionError(`A conexão com o servidor (${cfg.resolvedWsUrl}) foi encerrada antes da sincronização.`);
       }
     };
 
@@ -241,6 +253,10 @@ export function App() {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
+      }
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
       }
       ws.close();
     };
@@ -271,8 +287,14 @@ export function App() {
             setJoined(true);
           }}
           onOpenRules={() => setShowOnboarding(true)}
+          onOpenServerConfig={() => setShowServerConfig(true)}
         />
         {showOnboarding && <OnboardingOverlay onDismiss={() => setShowOnboarding(false)} />}
+        <ServerConfigModal
+          isOpen={showServerConfig}
+          onClose={() => setShowServerConfig(false)}
+          onServerChanged={handleRetry}
+        />
       </>
     );
   }
@@ -283,17 +305,17 @@ export function App() {
       <div className="min-h-screen bg-[#0C0B0A] flex flex-col items-center justify-center p-6 text-center select-none max-w-sm mx-auto animate-fade-in-dramatic">
         <DissimuloLogo size="sm" subtitle={false} />
 
-        <div className="my-6 p-6 rounded-2xl bg-[#171411] border-2 border-[#9F3D3D] shadow-noir-crimson space-y-4 w-full">
+        <div className="my-6 p-6 rounded-2xl bg-[#171411] border-2 border-[#9F3D3D] shadow-noir-crimson space-y-4 w-full text-left">
           <div className="w-12 h-12 rounded-full bg-[#2A1114] border border-[#9F3D3D] flex items-center justify-center text-[#F1A8A4] mx-auto shadow-md">
             <ShieldAlert className="w-6 h-6" />
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 text-center">
             <span className="stamp-confidential text-[9px]">COMUNICADO DE FALHA</span>
             <h2 className="text-base font-serif font-bold text-[#F2EDE4] leading-snug">
               FALHA NA CONEXÃO COM A MANSÃO
             </h2>
-            <p className="text-xs font-sans text-[#C2B7AA] leading-relaxed">
+            <p className="text-xs font-sans text-[#C2B7AA] leading-relaxed pt-1">
               {connectionError || "O servidor da partida não está acessível no momento. Verifique sua conexão e tente novamente."}
             </p>
           </div>
@@ -308,10 +330,18 @@ export function App() {
             </button>
 
             <button
-              onClick={handleBackToWelcome}
-              className="w-full py-3 noir-btn-secondary rounded-xl font-serif font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+              onClick={() => setShowServerConfig(true)}
+              className="w-full py-3 bg-[#221D19] hover:bg-[#2A2420] text-[#B79A70] border border-[#4A3A32] rounded-xl font-serif font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4 text-[#B79A70]" />
+              <Server className="w-4 h-4 text-[#B79A70]" />
+              <span>Configurar Servidor</span>
+            </button>
+
+            <button
+              onClick={handleBackToWelcome}
+              className="w-full py-2.5 noir-btn-secondary rounded-xl font-serif font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#C2B7AA]" />
               <span>Voltar ao Início</span>
             </button>
           </div>
@@ -320,12 +350,19 @@ export function App() {
         <span className="text-[10px] font-mono text-[#8C8074] uppercase tracking-widest">
           SALA: {roomCode} // PROTOCOLO DE RECUPERAÇÃO
         </span>
+
+        <ServerConfigModal
+          isOpen={showServerConfig}
+          onClose={() => setShowServerConfig(false)}
+          onServerChanged={handleRetry}
+        />
       </div>
     );
   }
 
   // 3. CONNECTING STATE (STYLIZED NOIR CRIMINAL LOADING SCREEN)
   if (connectionStatus === "CONNECTING" || !publicState || !privateState) {
+    const currentCfg = resolveServerConfig();
     return (
       <div className="min-h-screen bg-[#0C0B0A] flex flex-col items-center justify-center p-6 text-center space-y-6 select-none max-w-sm mx-auto animate-fade-in-dramatic">
         <DissimuloLogo size="md" subtitle={false} />
@@ -342,12 +379,17 @@ export function App() {
           </p>
         </div>
 
-        <div className="p-3 bg-[#171411] rounded-xl border border-[#4A3A32] text-[11px] font-mono text-[#8C8074] w-full">
-          <span>CASO: </span>
-          <strong className="text-[#B79A70] font-bold">{roomCode}</strong>
-          <span className="mx-2">•</span>
-          <span>INVESTIGADOR: </span>
-          <strong className="text-[#F2EDE4] font-medium">{playerName}</strong>
+        <div className="p-3 bg-[#171411] rounded-xl border border-[#4A3A32] text-[11px] font-mono text-[#8C8074] w-full space-y-1">
+          <div>
+            <span>CASO: </span>
+            <strong className="text-[#B79A70] font-bold">{roomCode}</strong>
+            <span className="mx-2">•</span>
+            <span>INVESTIGADOR: </span>
+            <strong className="text-[#F2EDE4] font-medium">{playerName}</strong>
+          </div>
+          <div className="text-[10px] text-[#8C8074] truncate">
+            Alvo: {currentCfg.resolvedWsUrl}
+          </div>
         </div>
 
         <button
